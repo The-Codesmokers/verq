@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Squares from "../components/Squares";
 
 const Login = () => {
@@ -69,6 +70,12 @@ const Login = () => {
               Sign In
             </button>
           </form>
+          <p className="mt-4 text-center text-gray-400">
+            Don't have an account?{" "}
+            <Link to="/register" className="text-blue-500 hover:text-blue-400 font-medium">
+              Register here
+            </Link>
+          </p>
         </div>
       </div>
 

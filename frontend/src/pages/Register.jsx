@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Squares from "../components/Squares";
 
 const Register = () => {
@@ -19,7 +20,7 @@ const Register = () => {
         hoverFillColor="rgba(255, 255, 255, 0.05)"
       />
       
-      <div className="absolute inset-0 flex items-center justify-center ">
+      <div className="absolute inset-0 flex items-center justify-center">
         <div className="glass-card p-8 w-full max-w-md">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Register</h2>
           <form className="space-y-4">
@@ -109,17 +110,24 @@ const Register = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 px-4 bg-blue-600/75 hover:bg-blue-700/75 text-white font-medium rounded-2xl transition duration-200"
+              className="w-full py-2 px-4 bg-blue-600/75 hover:bg-blue-700/75 text-white font-medium rounded-full transition duration-200"
             >
               Register
             </button>
           </form>
+          <p className="mt-4 text-center text-gray-400">
+            Already have an account?{" "}
+            <Link to="/login" className="text-blue-500 hover:text-blue-400 font-medium">
+              Login here
+            </Link>
+          </p>
         </div>
       </div>
 
       <style jsx>{`
         .glass-card {
-          background: rgba(2, 2, 2);
+          background: rgba(2, 2, 2, 0.12);
+          backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 1rem;
         }
