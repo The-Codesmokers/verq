@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const { processPDF } = require('./services/pdfService');
+const { generateInterviewQuestion } = require('./services/openaiService');
+const { validateConfig } = require('./config/config');
+
+// Validate environment variables
+validateConfig();
 
 // Get the PDF file path from command line arguments
 const pdfPath = process.argv[2];
@@ -22,7 +27,64 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir);
 }
 
-async function extractAndSavePDF() {
+// Function to generate a fallback question based on the resume text
+function generateFallbackQuestion(resumeText) {
+  // Extract skills and projects from the resume text
+  const skillsMatch = resumeText.match(/SKILLS.*?(?=EXPERIENCE|PROJECTS|ACTIVITIES|$)/is);
+  const projectsMatch = resumeText.match(/PROJECTS.*?(?=ACTIVITIES|$)/is);
+  
+  let skills = [];
+  let projects = [];
+  
+  if (skillsMatch) {
+    const skillsText = skillsMatch[0];
+    // Extract programming languages
+    const languagesMatch = skillsText.match(/Programming Languages:\s*([^\n]+)/i);
+    if (languagesMatch) {
+      skills = skills.concat(languagesMatch[1].split(',').map(s => s.trim()));
+    }
+    
+    // Extract frontend technologies
+    const frontendMatch = skillsText.match(/Frontend Technologies:\s*([^\n]+)/i);
+    if (frontendMatch) {
+      skills = skills.concat(frontendMatch[1].split(',').map(s => s.trim()));
+    }
+    
+    // Extract backend technologies
+    const backendMatch = skillsText.match(/Backend Technologies:\s*([^\n]+)/i);
+    if (backendMatch) {
+      skills = skills.concat(backendMatch[1].split(',').map(s => s.trim()));
+    }
+  }
+  
+  if (projectsMatch) {
+    const projectsText = projectsMatch[0];
+    // Extract project names
+    const projectNames = projectsText.match(/\[Link.*?\]/g) || [];
+    projects = projectNames.map(name => name.replace(/\[Link.*?\]/g, '').trim());
+  }
+  
+  // Generate a question based on the extracted information
+  let question = "Can you explain how you would implement ";
+  
+  if (projects.length > 0) {
+    const randomProject = projects[Math.floor(Math.random() * projects.length)];
+    question += `a feature in your ${randomProject} project using `;
+  } else {
+    question += "a feature in your most recent project using ";
+  }
+  
+  if (skills.length > 0) {
+    const randomSkill = skills[Math.floor(Math.random() * skills.length)];
+    question += `${randomSkill}?`;
+  } else {
+    question += "your preferred technology stack?";
+  }
+  
+  return question;
+}
+
+async function extractAndProcessPDF() {
   try {
     console.log(`Processing PDF: ${pdfPath}`);
     
@@ -45,10 +107,33 @@ async function extractAndSavePDF() {
     console.log(extractedText);
     console.log('----------------------------------------');
     console.log(`\nText has been saved to: ${outputPath}`);
+
+    // Generate interview question using OpenAI
+    console.log('\nGenerating interview question...');
+    try {
+      const question = await generateInterviewQuestion(extractedText);
+      
+      console.log('\nGenerated Interview Question:');
+      console.log('----------------------------------------');
+      console.log(question);
+      console.log('----------------------------------------');
+    } catch (openaiError) {
+      console.error('\nError with OpenAI API:', openaiError.message);
+      console.log('\nGenerating fallback question instead...');
+      
+      const fallbackQuestion = generateFallbackQuestion(extractedText);
+      
+      console.log('\nFallback Interview Question:');
+      console.log('----------------------------------------');
+      console.log(fallbackQuestion);
+      console.log('----------------------------------------');
+      console.log('\nNote: This is a fallback question generated without using OpenAI. For better questions, please fix the OpenAI API issue.');
+    }
+    
   } catch (error) {
     console.error('Error processing PDF:', error.message);
     process.exit(1);
   }
 }
 
-extractAndSavePDF(); 
+extractAndProcessPDF(); 
