@@ -22,12 +22,20 @@ const Register = () => {
       return;
     }
 
+    // Validate password strength
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           name,
           email,
@@ -42,12 +50,16 @@ const Register = () => {
       }
 
       // Store the token in localStorage
-      localStorage.setItem('token', data.token);
-      
-      // Redirect to dashboard or home page
-      navigate('/');
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        // Redirect to dashboard or home page
+        navigate('/');
+      } else {
+        throw new Error('No token received from server');
+      }
     } catch (err) {
-      setError(err.message);
+      console.error('Registration error:', err);
+      setError(err.message || 'Failed to register. Please try again.');
     }
   };
 

@@ -37,17 +37,22 @@ exports.register = async (req, res) => {
 
     // Create new user
     const newUser = await User.create({
-      name,
+      displayName: name,
       email,
       password,
-      authProvider: 'jwt'
+      authMethod: 'jwt',
+      isEmailVerified: false
     });
+
+    // Update last login
+    await newUser.updateLastLogin();
 
     createSendToken(newUser, 201, res);
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(400).json({
       status: 'error',
-      message: error.message
+      message: error.message || 'Registration failed'
     });
   }
 };

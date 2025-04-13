@@ -1,11 +1,45 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Squares from "../components/Squares";
+import { signInWithGoogle, loginWithEmailPassword } from "../services/authService";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await loginWithEmailPassword(email, password);
+      navigate('/');
+    } catch (error) {
+      setError(error.message || "Failed to login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const user = await signInWithGoogle();
+      console.log('Signed in user:', user);
+      navigate('/');
+    } catch (error) {
+      setError(error.message || "Failed to sign in with Google");
+      console.error('Error during Google sign in:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
@@ -17,10 +51,22 @@ const Login = () => {
         hoverFillColor="rgba(255, 255, 255, 0.05)"
       />
       
-      <div className="absolute inset-0 flex items-center justify-center ">
-        <div className="glass-card p-8 w-full max-w-md">
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="glass-card p-8 w-full max-w-md" style={{
+          background: 'rgba(2, 2, 2, 0.12)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '1rem'
+        }}>
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Login</h2>
-          <form className="space-y-4">
+          
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1">
                 Email
@@ -32,6 +78,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your email"
+                required
               />
             </div>
             <div className="relative">
@@ -45,6 +92,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your password"
+                required
               />
               <button
                 type="button"
@@ -65,9 +113,34 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 px-4 bg-blue-600/75 hover:bg-blue-700/75 text-white font-medium rounded-2xl transition duration-200"
+              disabled={loading}
+              className="w-full py-2 px-4 bg-blue-600/75 hover:bg-blue-700/75 text-white font-medium rounded-2xl transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-2xl transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
+                />
+              </svg>
+              {loading ? "Signing in..." : "Continue with Google"}
             </button>
           </form>
           <p className="mt-4 text-center text-gray-400">
@@ -78,15 +151,6 @@ const Login = () => {
           </p>
         </div>
       </div>
-
-      <style jsx>{`
-        .glass-card {
-          background: rgba(2, 2, 2, 0.12);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 1rem;
-        }
-      `}</style>
     </div>
   );
 };
