@@ -23,7 +23,7 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,8 +44,8 @@ const Register = () => {
       // Store the token in localStorage
       localStorage.setItem('token', data.token);
       
-      // Redirect to dashboard or home page
-      navigate('/');
+      // Redirect to landing page
+      navigate('/landing');
     } catch (err) {
       setError(err.message);
     }

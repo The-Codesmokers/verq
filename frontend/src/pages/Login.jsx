@@ -1,11 +1,45 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Squares from "../components/Squares";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Store the token in localStorage
+      localStorage.setItem('token', data.token);
+      
+      // Redirect to landing page
+      navigate('/landing');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
@@ -20,7 +54,12 @@ const Login = () => {
       <div className="absolute inset-0 flex items-center justify-center ">
         <div className="glass-card p-8 w-full max-w-md">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Login</h2>
-          <form className="space-y-4">
+          {error && (
+            <div className="mb-4 p-2 bg-red-500/10 border border-red-500/50 rounded text-red-500 text-center">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1">
                 Email
@@ -32,6 +71,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your email"
+                required
               />
             </div>
             <div className="relative">
@@ -45,6 +85,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your password"
+                required
               />
               <button
                 type="button"
