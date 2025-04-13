@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { processPDF } = require('./services/pdfService');
-const { generateInterviewQuestion } = require('./services/openaiService');
+const { generateInterviewQuestion } = require('./services/geminiService');
 const { validateConfig } = require('./config/config');
 
 // Validate environment variables
@@ -108,7 +108,7 @@ async function extractAndProcessPDF() {
     console.log('----------------------------------------');
     console.log(`\nText has been saved to: ${outputPath}`);
 
-    // Generate interview question using OpenAI
+    // Generate interview question using Gemini
     console.log('\nGenerating interview question...');
     try {
       const question = await generateInterviewQuestion(extractedText);
@@ -117,8 +117,8 @@ async function extractAndProcessPDF() {
       console.log('----------------------------------------');
       console.log(question);
       console.log('----------------------------------------');
-    } catch (openaiError) {
-      console.error('\nError with OpenAI API:', openaiError.message);
+    } catch (geminiError) {
+      console.error('\nError with Gemini API:', geminiError.message);
       console.log('\nGenerating fallback question instead...');
       
       const fallbackQuestion = generateFallbackQuestion(extractedText);
@@ -127,7 +127,7 @@ async function extractAndProcessPDF() {
       console.log('----------------------------------------');
       console.log(fallbackQuestion);
       console.log('----------------------------------------');
-      console.log('\nNote: This is a fallback question generated without using OpenAI. For better questions, please fix the OpenAI API issue.');
+      console.log('\nNote: This is a fallback question generated without using AI. For better questions, please fix the Gemini API issue.');
     }
     
   } catch (error) {

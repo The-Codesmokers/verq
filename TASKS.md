@@ -18,13 +18,17 @@ A breakdown of specific tasks for the 5-hour MVP development sprint, organized b
 - [x] Create new Express project: `mkdir verq-server && cd verq-server && npm init -y`
 - [x] Install dependencies: `npm install express mongoose dotenv cors openai`
 - [x] Create basic Express server setup in `server.js`
-- [ ] Set up environment variables in `.env` file
+- [x] Set up environment variables in `.env` file
+- [x] Create `.env.example` file with all required variables
 - [ ] Configure MongoDB connection
 
 ### API Setup
-- [ ] Create OpenAI service configuration
-- [ ] Test OpenAI API connection with a simple prompt
+- [x] Create OpenAI service configuration
+- [x] Test OpenAI API connection with a simple prompt
 - [x] Set up CORS for local development
+- [x] Add Gemini API configuration
+- [ ] Test Gemini API connection
+- [ ] Implement fallback mechanism between OpenAI and Gemini
 
 ---
 
@@ -42,9 +46,9 @@ A breakdown of specific tasks for the 5-hour MVP development sprint, organized b
 ### Controllers
 - [x] Create interview controller with methods:
   - `submitResume`: Store resume text and job role
-  - `generateQuestions`: Generate questions with GPT-4
+  - `generateQuestions`: Generate questions with GPT-4/Gemini
   - `submitAnswer`: Store answer transcript
-  - `generateFeedback`: Evaluate answer with GPT-4
+  - `generateFeedback`: Evaluate answer with GPT-4/Gemini
 
 ### Routes
 - [x] Set up API routes:
@@ -54,10 +58,13 @@ A breakdown of specific tasks for the 5-hour MVP development sprint, organized b
   - [ ] `POST /api/answers`
   - [ ] `POST /api/feedback`
 
-### OpenAI Integration
-- [ ] Create prompts for question generation
-- [ ] Create prompts for answer evaluation
+### AI Integration
+- [x] Create prompts for question generation
+- [x] Create prompts for answer evaluation
 - [x] Implement error handling for API calls
+- [ ] Add Gemini-specific prompts
+- [ ] Implement AI service selection logic
+- [ ] Add fallback question generation
 
 ---
 
