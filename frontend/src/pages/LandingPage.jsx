@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+    <div className="min-h-screen w-full bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="w-full max-w-7xl mx-auto px-4 py-16">
         <div className="flex flex-col items-center text-center">
           <h1 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
             Ace Your Next Interview with AI
@@ -22,7 +22,7 @@ const LandingPage = () => {
       </div>
 
       {/* Features Section */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="w-full max-w-7xl mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-gray-800 p-6 rounded-lg">
@@ -44,7 +44,7 @@ const LandingPage = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="w-full max-w-7xl mx-auto px-4 py-16">
         <div className="bg-gray-800 rounded-xl p-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Improve Your Interview Skills?</h2>
           <p className="text-gray-300 mb-6">Join thousands of professionals who have aced their interviews with VerQ.</p>
