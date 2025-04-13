@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Squares from "../components/Squares";
+import Spline from '@splinetool/react-spline';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -52,16 +52,16 @@ const Register = () => {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
-      <Squares 
-        direction="diagonal" 
-        speed={0.5} 
-        borderColor="rgba(255, 255, 255, 0.1)"
-        squareSize={40}
-        hoverFillColor="rgba(255, 255, 255, 0.05)"
-      />
+    <div className="relative w-full h-screen overflow-hidden">
+      {/* Spline background */}
+      <div className="absolute inset-0 z-0">
+        <Spline scene="https://prod.spline.design/7Tb0aKWGPlARtmku/scene.splinecode" />
+      </div>
       
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* Overlay to ensure form is visible */}
+      <div className="absolute inset-0 bg-black/30 z-10"></div>
+      
+      <div className="absolute inset-0 flex items-center justify-center z-20">
         <div className="glass-card p-8 w-full max-w-md">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Register</h2>
           {error && (
@@ -178,9 +178,11 @@ const Register = () => {
 
       <style jsx>{`
         .glass-card {
-          background: rgba(2, 2, 2);
+          background: rgba(0, 0, 0, 0.15);
+          backdrop-filter: blur(50px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 1rem;
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
       `}</style>
     </div>
