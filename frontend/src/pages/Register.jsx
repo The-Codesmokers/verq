@@ -79,7 +79,7 @@ const Register = () => {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 rounded-[0.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your full name"
                 required
               />
@@ -93,7 +93,7 @@ const Register = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 rounded-[0.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your email"
                 required
               />
@@ -107,7 +107,7 @@ const Register = () => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                className="w-full px-4 py-2 rounded-[0.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                 placeholder="Enter your password"
                 required
                 minLength={8}
@@ -138,7 +138,7 @@ const Register = () => {
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                className="w-full px-4 py-2 rounded-[0.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                 placeholder="Confirm your password"
                 required
                 minLength={8}
@@ -162,7 +162,7 @@ const Register = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 px-4 bg-blue-600/75 hover:bg-blue-700/75 text-white font-medium rounded-full transition duration-200"
+              className="w-full py-2 px-4 bg-purple-600/75 hover:bg-transparent text-white font-medium rounded-[0.5rem] transition duration-200 mt-10"
             >
               Register
             </button>

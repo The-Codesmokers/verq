@@ -69,7 +69,7 @@ const Login = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 rounded-[0.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your email"
                 required
               />
@@ -83,9 +83,10 @@ const Login = () => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 rounded-[0.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                 placeholder="Enter your password"
                 required
+                minLength={8}
               />
               <button
                 type="button"
@@ -106,7 +107,7 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 px-4 bg-blue-600/75 hover:bg-blue-700/75 text-white font-medium rounded-2xl transition duration-200"
+              className="w-full py-2 px-4 bg-purple-600/75 hover:bg-transparent text-white font-medium rounded-[0.5rem] transition duration-200 mx-auto mt-10"
             >
               Sign In
             </button>
@@ -125,7 +126,7 @@ const Login = () => {
           background: rgba(0, 0, 0, 0.15);
           backdrop-filter: blur(50px);
           border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 1rem;
+          border-radius: 0.75rem;
           box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
       `}</style>
