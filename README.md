@@ -124,3 +124,62 @@ backend/
 ├── .env              # Environment variables
 └── package.json      # Project dependencies and scripts
 ```
+
+## Frontend Setup and Running Instructions
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm (Node Package Manager)
+
+### Setup
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Running the Frontend
+1. For development (with hot module replacement):
+   ```bash
+   npm run dev
+   ```
+
+2. For production build:
+   ```bash
+   npm run build
+   ```
+
+3. To preview the production build:
+   ```bash
+   npm run preview
+   ```
+
+The frontend development server will start on port 5173 by default. Make sure the backend server is running on port 3000 for the API calls to work correctly.
+
+### Frontend Project Structure
+```
+frontend/
+├── src/
+│   ├── assets/        # Static assets (images, 3D models)
+│   ├── components/    # Reusable React components
+│   ├── contexts/      # React context providers
+│   ├── pages/         # Page components
+│   ├── routes/        # Route definitions
+│   ├── App.jsx        # Main application component
+│   └── main.jsx       # Application entry point
+├── public/            # Public static files
+├── index.html         # HTML template
+└── package.json       # Project dependencies and scripts
+```
+
+### Features
+- Modern React with Vite for fast development
+- Tailwind CSS for styling
+- React Router for navigation
+- 3D scene integration with Spline
+- Responsive design
+- Custom font integration
