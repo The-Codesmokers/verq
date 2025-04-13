@@ -15,16 +15,16 @@ A breakdown of specific tasks for the 5-hour MVP development sprint, organized b
 - [ ] Create basic layout component
 
 ### Backend Initialization
-- [ ] Create new Express project: `mkdir verq-server && cd verq-server && npm init -y`
-- [ ] Install dependencies: `npm install express mongoose dotenv cors openai`
-- [ ] Create basic Express server setup in `server.js`
+- [x] Create new Express project: `mkdir verq-server && cd verq-server && npm init -y`
+- [x] Install dependencies: `npm install express mongoose dotenv cors openai`
+- [x] Create basic Express server setup in `server.js`
 - [ ] Set up environment variables in `.env` file
 - [ ] Configure MongoDB connection
 
 ### API Setup
 - [ ] Create OpenAI service configuration
 - [ ] Test OpenAI API connection with a simple prompt
-- [ ] Set up CORS for local development
+- [x] Set up CORS for local development
 
 ---
 
@@ -40,23 +40,24 @@ A breakdown of specific tasks for the 5-hour MVP development sprint, organized b
   ```
 
 ### Controllers
-- [ ] Create interview controller with methods:
+- [x] Create interview controller with methods:
   - `submitResume`: Store resume text and job role
   - `generateQuestions`: Generate questions with GPT-4
   - `submitAnswer`: Store answer transcript
   - `generateFeedback`: Evaluate answer with GPT-4
 
 ### Routes
-- [ ] Set up API routes:
-  - `POST /api/resume`
-  - `POST /api/questions`
-  - `POST /api/answers`
-  - `POST /api/feedback`
+- [x] Set up API routes:
+  - `POST /api/upload-pdf` (Added PDF upload endpoint)
+  - [ ] `POST /api/resume`
+  - [ ] `POST /api/questions`
+  - [ ] `POST /api/answers`
+  - [ ] `POST /api/feedback`
 
 ### OpenAI Integration
 - [ ] Create prompts for question generation
 - [ ] Create prompts for answer evaluation
-- [ ] Implement error handling for API calls
+- [x] Implement error handling for API calls
 
 ---
 
