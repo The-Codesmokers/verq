@@ -7,8 +7,21 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'work-sans': ['Work Sans', 'sans-serif'],
+        'sans': ['"Chakra Petch"', 'sans-serif'],
+        'heading': ['"Zen Dots"', 'sans-serif'],
+        'lato': ['Lato', 'sans-serif'],
         'montserrat': ['Montserrat', 'sans-serif'],
+        'chakra': ['"Chakra Petch"', 'sans-serif'],
+        'bruno': ['"Bruno Ace SC"', 'sans-serif'],
+        'zen': ['"Zen Dots"', 'sans-serif'],
+      },
+      fontWeight: {
+        'thin': '300',
+        'light': '400',
+        'normal': '500',
+        'medium': '600',
+        'semibold': '700',
+        'bold': '900',
       },
       colors: {
         'background': '#09090B',

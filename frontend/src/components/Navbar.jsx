@@ -166,7 +166,7 @@ function Navbar() {
         {/* Left section - Logo */}
         <div className="flex flex-col justify-center">
           <Link to="/" className="group">
-            <h1 className="font-montserrat font-bold text-2xl text-gray-900 dark:text-gray-100 group-hover:text-pink-500 dark:group-hover:text-pink-400">VerQ</h1>
+            <h1 className="font-zen font-bold text-2xl text-gray-900 dark:text-gray-100 group-hover:text-pink-500 dark:group-hover:text-pink-400">VerQ</h1>
           </Link>
         </div>
         
@@ -174,7 +174,7 @@ function Navbar() {
         {viewport !== 'mobile' && (
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <div className="bg-black/10 dark:bg-white/10 backdrop-blur-md rounded-full shadow-sm inline-flex items-center border border-gray-300 dark:border-gray-700 p-0.5">
-              <ul className="flex font-montserrat font-semibold text-xs items-center">
+              <ul className="flex font-chakra font-semibold text-sm items-center">
                 <li className="flex items-center">
                   <Link 
                     to="/" 
