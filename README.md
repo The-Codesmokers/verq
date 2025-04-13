@@ -6,6 +6,7 @@
 - Node.js (v14 or higher)
 - npm (Node Package Manager)
 - OpenAI API key (for AI-generated questions)
+- Gemini API key (for alternative AI-generated questions)
 
 ### Setup
 1. Navigate to the backend directory:
@@ -18,7 +19,12 @@
    npm install
    ```
 
-3. Create a `.env` file in the backend directory with the following variables:
+3. Create a `.env` file in the backend directory by copying the `.env.example` file:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Update the `.env` file with your API keys and configuration:
    ```
    # OpenAI Configuration
    OPENAI_API_KEY=your_openai_api_key_here
@@ -30,6 +36,9 @@
    # File Upload Configuration
    UPLOAD_DIR=uploads
    MAX_FILE_SIZE=5242880  # 5MB in bytes
+
+   # AI Configuration
+   GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
    Note: The following variables are prepared for future use (currently commented out in the code):
@@ -46,15 +55,24 @@
    # JWT_EXPIRES_IN=24h
    ```
 
-### OpenAI API Key Setup
-To use the AI-generated interview questions feature, you need a valid OpenAI API key:
+### API Key Setup
+
+#### OpenAI API Key
+To use the AI-generated interview questions feature with OpenAI:
 
 1. Sign up for an OpenAI account at https://platform.openai.com/signup
 2. Create an API key in your OpenAI dashboard
 3. Add the API key to your `.env` file as `OPENAI_API_KEY=your_key_here`
 4. Make sure your OpenAI account has sufficient credits or billing information set up
 
-If you don't have a valid OpenAI API key or encounter quota issues, the system will automatically generate a fallback question based on the resume content.
+#### Gemini API Key
+As an alternative to OpenAI, you can use Google's Gemini API:
+
+1. Visit the Google AI Studio at https://makersuite.google.com/app/apikey
+2. Create a new API key
+3. Add the API key to your `.env` file as `GEMINI_API_KEY=your_key_here`
+
+If neither OpenAI nor Gemini API keys are available or if you encounter quota issues, the system will automatically generate a fallback question based on the resume content.
 
 ### Running the Backend
 1. For development (with auto-reload):

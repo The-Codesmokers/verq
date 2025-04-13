@@ -4,6 +4,9 @@ const config = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
   },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY,
+  },
   server: {
     port: process.env.PORT || 3000,
     nodeEnv: process.env.NODE_ENV || 'development',
@@ -34,7 +37,7 @@ const config = {
 // Validate required environment variables
 function validateConfig() {
   const requiredEnvVars = [
-    'OPENAI_API_KEY',
+    'GEMINI_API_KEY',
   ];
 
   const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);

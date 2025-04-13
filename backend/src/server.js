@@ -1,67 +1,38 @@
+require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
+const morgan = require('morgan');
 const multer = require('multer');
 const path = require('path');
-const { processPDF } = require('./services/pdfService');
-const fs = require('fs');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
+app.use(morgan('dev'));
 app.use(express.json());
 
-// Configure multer for PDF uploads - using memory storage instead of disk
-const upload = multer({
-  storage: multer.memoryStorage(),
-  fileFilter: function (req, file, cb) {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed!'), false);
-    }
-  }
-});
-
-// Create output directory if it doesn't exist
-const outputDir = path.join(__dirname, 'output');
-if (!fs.existsSync(outputDir)) {
-  fs.mkdirSync(outputDir);
-}
-
 // Routes
-app.post('/api/upload-pdf', upload.single('pdf'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No PDF file uploaded' });
-    }
+app.use('/api/auth', authRoutes);
 
-    // Process the PDF from memory
-    const extractedText = await processPDF(req.file.buffer);
-
-    // Generate output filename using timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const outputPath = path.join(outputDir, `resume_${timestamp}.txt`);
-
-    // Save the extracted text
-    fs.writeFileSync(outputPath, extractedText);
-
-    res.json({ 
-      text: extractedText,
-      savedTo: outputPath
-    });
-  } catch (error) {
-    console.error('Error processing PDF:', error);
-    res.status(500).json({ error: 'Error processing PDF file' });
-  }
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    status: 'error',
+    message: err.message || 'Something went wrong!'
+  });
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 }); 

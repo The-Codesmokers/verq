@@ -1,14 +1,55 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Squares from "../components/Squares";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      // Store the token in localStorage
+      localStorage.setItem('token', data.token);
+      
+      // Redirect to dashboard or home page
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
@@ -23,7 +64,12 @@ const Register = () => {
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="glass-card p-8 w-full max-w-md">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Register</h2>
-          <form className="space-y-4">
+          {error && (
+            <div className="mb-4 p-2 bg-red-500/10 border border-red-500/50 rounded text-red-500 text-center">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-1">
                 Full Name
@@ -35,6 +81,7 @@ const Register = () => {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your full name"
+                required
               />
             </div>
             <div>
@@ -48,6 +95,7 @@ const Register = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your email"
+                required
               />
             </div>
             <div className="relative">
@@ -61,6 +109,8 @@ const Register = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                 placeholder="Enter your password"
+                required
+                minLength={8}
               />
               <button
                 type="button"
@@ -90,6 +140,8 @@ const Register = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                 placeholder="Confirm your password"
+                required
+                minLength={8}
               />
               <button
                 type="button"
@@ -126,8 +178,7 @@ const Register = () => {
 
       <style jsx>{`
         .glass-card {
-          background: rgba(2, 2, 2, 0.12);
-          backdrop-filter: blur(10px);
+          background: rgba(2, 2, 2);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 1rem;
         }
