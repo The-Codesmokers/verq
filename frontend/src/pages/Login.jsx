@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from "react";
-import { Squares } from "../../../../src/components/Squares";
+import { useState } from "react";
+import Squares from "../components/Squares";
 
 const Login = () => {
   const [email, setEmail] = useState("");
