@@ -1,0 +1,62 @@
+
+
+ 
+Koustubh Pande 
+koustubhpande021@gmail.com |+91 91310 07294 | LinkedIn | GitHub | Portfolio 
+ 
+EDUCATION     
+Vellore Institute of Technology   Bhopal, India 
+Bachelor of Technology in Computer Science and Engineering   Sep 2023 – Sep 2027 
+SKILLS                                                         
+Programming Languages:  Python, C++, JavaScript, TypeScript 
+Frontend Technologies:  React.js, Next.js, HTML, CSS, Tailwind CSS, Bootstrap 
+Backend Technologies:  Node.js, Express.js, Flask, Django 
+Databases:   MongoDB, SQLite, MySQL 
+UI/UX & Design:  Figma, Wireframing, Prototyping 
+Tools & Platforms:  Git, GitHub, Postman, Vercel, VS Code, Jupyter Notebook 
+Soft Skills:  Leadership, Team Management, Problem-Solving 
+EXPERIENCE     
+Freelancer    Remote 
+Full Stack Developer    Dec 2024 – Present 
+● Developed a responsive frontend for a school organization using React.js, enhancing load speed by 40%. 
+● Built an interactive game with a leaderboard using React, Redux, and Appwrite, boosting user engagement by 30%. 
+● Developed scalable backend APIs using Express.js and MongoDB, reducing API response time by 25%. 
+● Designed reusable UI components, improving code maintainability. 
+Languify                                                                                                                      Remote 
+AI Engineer Intern                                                                   June 2024 – Aug 2024  
+● Optimized AI-driven text classification models using TensorFlow, improving accuracy by 20%. 
+● Implemented Vision Transformer (ViT) architectures for image recognition. 
+● Developed data preprocessing pipelines, reducing inference time by 15%. 
+PROJECTS      
+Bazaario [Link
+]     
+Tech Stack: React.js, Chart.js, Node.js, Express.js, MongoDB, JWT     
+● A multi-vendor platform that allows users to create and manage multiple websites for selling products. 
+● Website creation and management with customizable templates. 
+● Analytics with chart visualization options (pie charts, line graphs) 
+Expenser [Link
+]     
+Tech Stack: React.js, Node.js, Express.js, MongoDB, JWT 
+● Developed a full-stack expense tracker with secure authentication. 
+● Integrated MongoDB database schema, improving data retrieval speed by 40%. 
+Escape 404 [Link
+]    
+Tech Stack: React.js, Redux, Appwrite, TypeScript 
+● Built an interactive web-based game with real-time scoring. 
+● Implemented state management using Redux. 
+Movie Library/Management System [Link
+]    
+Tech Stack: React.js, Node.js, Express.js, MongoDB 
+● Developed backend API for movie catalog management. 
+● Designed a dynamic UI with React.js, reducing load time by 25%. 
+ACTIVITIES AND LEADERSHIP     
+● 
+Led a Team to a 24 hour Hackathon hosted by MERN Matrix Club - VITB, check out ARKAIV. (It is an automated 
+platform that tracks, summarizes, and displays the latest AI tools and models from GitHub, Hugging Face, and arXiv papers.) 
+● Technical Team Core Member of The Eureka Club - VITB   Dec 2024 – Present 
+● Social Media and Photography Team Core Member of iCreate Community - VITB  Dec 2024 - Present 
+ 
+
+ 
+ 
+ 
