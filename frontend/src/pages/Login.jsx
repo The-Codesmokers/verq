@@ -35,7 +35,7 @@ const Login = () => {
       localStorage.setItem('token', data.token);
       
       // Redirect to landing page
-      navigate('/landing');
+      navigate('/');
     } catch (err) {
       setError(err.message);
     }
