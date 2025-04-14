@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import LandingPage from '../pages/LandingPage';
+import Dashboard from '../pages/Dashboard';
+import MyInterviews from '../pages/MyInterviews';
 import Interview from '../pages/interview';
 
 export const AppRoutes = () => {
