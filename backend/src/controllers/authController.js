@@ -196,9 +196,58 @@ const firebaseAuth = async (req, res) => {
   }
 };
 
+const githubAuth = async (req, res) => {
+  try {
+    const { uid, email, name, photoURL } = req.body;
+
+    // Check if user already exists
+    let user = await User.findOne({ 
+      $or: [
+        { email },
+        { uid }
+      ]
+    });
+
+    if (!user) {
+      // Create new user if doesn't exist
+      user = await User.create({
+        displayName: name,
+        email,
+        authMethod: 'github',
+        uid,
+        photoURL,
+        isEmailVerified: true
+      });
+    } else if (user.authMethod !== 'github') {
+      // If user exists but with different auth method
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email already registered with different authentication method'
+      });
+    } else {
+      // Update existing GitHub user
+      user.uid = uid;
+      user.photoURL = photoURL;
+      await user.save();
+    }
+
+    // Update last login
+    await user.updateLastLogin();
+
+    createSendToken(user, 200, res);
+  } catch (error) {
+    console.error('GitHub authentication error:', error);
+    res.status(400).json({
+      status: 'error',
+      message: error.message || 'GitHub authentication failed'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   googleAuth,
-  firebaseAuth
+  firebaseAuth,
+  githubAuth
 }; 
