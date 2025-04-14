@@ -9,6 +9,7 @@
     "test-pdf": "node src/test-pdf.js",
     "extract-pdf": "node src/extract-pdf.js",
     "test-tts": "node src/test-tts.js",
+    "generate-question-tts": "node src/generate-question-tts.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
