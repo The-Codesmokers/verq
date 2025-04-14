@@ -73,7 +73,9 @@ function Navbar() {
         </div>
         
         <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-         
+          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+            Profile Settings
+          </button>
           <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
             My Interviews
           </button>
