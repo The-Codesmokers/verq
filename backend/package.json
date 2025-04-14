@@ -7,10 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test-pdf": "node src/test-pdf.js",
-    "extract-pdf": "node src/workflows/extract-pdf.js",
-    "interview": "node src/workflows/interview-flow.js",
-    "process-audio": "node src/workflows/interview-flow.js",
-    "test-stt": "node src/tests/test-stt.js",
+    "extract-pdf": "node src/extract-pdf.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -18,21 +15,20 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
-    "@deepgram/sdk": "^2.3.0",
-    "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "firebase-admin": "^12.7.0",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.1.1",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "openai": "^4.93.0",
     "pdf-parse": "^1.1.1",
-    "validator": "^13.11.0",
-    "gtts": "^0.2.1"
+    "validator": "^13.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"
