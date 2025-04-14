@@ -7,6 +7,7 @@ const router = express.Router();
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/google', authController.googleAuth);
+router.post('/firebase', authController.firebaseAuth);
 
 // Verify token and get user data
 router.get('/verify', authMiddleware, async (req, res) => {
