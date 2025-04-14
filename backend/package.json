@@ -10,13 +10,14 @@
     "extract-pdf": "node src/extract-pdf.js",
     "test-tts": "node src/test-tts.js",
     "generate-question-tts": "node src/generate-question-tts.js",
+    "interview": "node src/workflows/interview-flow.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@deepgram/sdk": "^3.11.3",
+    "@deepgram/sdk": "^2.4.0",
     "@google/generative-ai": "^0.24.0",
     "axios": "^1.8.4",
     "bcryptjs": "^2.4.3",

@@ -11,6 +11,17 @@ const { config } = require('../config/config');
  */
 async function textToSpeech(text, outputPath, options = {}) {
   try {
+    // Default options
+    const defaultOptions = {
+      model_id: 'aura-asteria-en',
+      encoding: 'mp3',
+      container: 'mp3',
+      sample_rate: 24000
+    };
+
+    // Merge with provided options
+    const requestOptions = { ...defaultOptions, ...options };
+
     // Call Deepgram TTS API
     const response = await axios({
       method: 'POST',
@@ -19,7 +30,13 @@ async function textToSpeech(text, outputPath, options = {}) {
         'Authorization': `Token ${config.deepgram.apiKey}`,
         'Content-Type': 'application/json'
       },
-      data: { text },
+      data: {
+        text: text,
+        model_id: requestOptions.model_id,
+        encoding: requestOptions.encoding,
+        container: requestOptions.container,
+        sample_rate: requestOptions.sample_rate
+      },
       responseType: 'arraybuffer'
     });
 
