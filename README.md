@@ -4,7 +4,7 @@ VerQ is an AI-powered mock interview platform that generates personalized interv
 
 ## Links
 [FRONTEND](https://verqai.vercel.app), 
-[BACKEND](https://verq.onrender.com), 
+[BACKEND](https://verq.onrender.com/health), 
 [PPT](https://www.canva.com/design/DAGkh628bOc/_F6BjT6a8UIxzT5oV7_Swg/edit?utm_content=DAGkh628bOc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) 
 
 
