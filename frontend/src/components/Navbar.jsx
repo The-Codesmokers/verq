@@ -1,10 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { getUserData } from '../services/userService';
 import { auth } from '../config/firebase';
 import profileImage from '../assets/images/profile.png';
 import { logout } from '../services/authService';
+import { api } from '../services/api';
 
 function Navbar() {
   const location = useLocation();
@@ -41,9 +41,13 @@ function Navbar() {
   useEffect(() => {
     const fetchUserData = async () => {
       if (profileOpen) {
-        const data = await getUserData();
-        if (data) {
-          setUserData(data);
+        try {
+          const response = await api.getUserProfile();
+          if (response.data && response.data.user) {
+            setUserData(response.data.user);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
         }
       }
     };
@@ -98,10 +102,10 @@ function Navbar() {
 
   // Profile dropdown component
   const ProfileDropdown = () => (
-    <div className={`absolute right-0 top-full mt-2 p-5 rounded-xl shadow-lg backdrop-blur-md border border-gray-200 dark:border-gray-700 w-[260px] ${profileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${darkMode ? 'bg-gray-900/90' : 'bg-white/90'}`}>
+    <div className={`absolute right-0 top-full mt-2 p-5 rounded-xl shadow-lg backdrop-blur-md border border-gray-700 w-[260px] ${profileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-gray-900/90`}>
       <div className="flex flex-col space-y-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
             {userData?.photoURL ? (
               <img 
                 src={userData.photoURL} 
@@ -109,28 +113,28 @@ function Navbar() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             )}
           </div>
           <div>
-            <h3 className="font-montserrat font-semibold text-lg">{userData?.displayName || 'Loading...'}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{userData?.email || 'Loading...'}</p>
+            <h3 className="font-montserrat font-semibold text-lg text-gray-100">{userData?.displayName || 'Loading...'}</h3>
+            <p className="text-sm text-gray-400">{userData?.email || 'Loading...'}</p>
           </div>
         </div>
         
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div className="border-t border-gray-700 pt-4">
           <Link 
             to="/my-interviews"
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+            className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg"
             onClick={() => setProfileOpen(false)}
           >
             My Interviews
           </Link>
           <button 
             onClick={handleSignOut}
-            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 rounded-lg"
           >
             Sign Out
           </button>
@@ -267,7 +271,7 @@ function Navbar() {
               onClick={toggleProfile}
               className="flex items-center space-x-2 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
                 {userData?.photoURL ? (
                   <img 
                     src={userData.photoURL} 
@@ -275,7 +279,7 @@ function Navbar() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
                 )}
