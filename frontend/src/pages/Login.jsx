@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
-import { signInWithGoogle, loginWithEmailPassword } from "../services/authService";
+import { signInWithGoogle, login } from "../services/authService";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await loginWithEmailPassword(email, password);
+      await login(email, password);
       navigate('/');
     } catch (error) {
       setError(error.message || "Failed to login");
