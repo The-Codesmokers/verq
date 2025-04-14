@@ -1,5 +1,7 @@
 # verq
 
+https://verqai.vercel.app
+
 ## Backend Setup and Running Instructions
 
 ### Prerequisites
