@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import LandingPage from './pages/LandingPage';
-import Dashboard from './pages/Dashboard';
+// import Dashboard from './pages/Dashboard';
 import MyInterviews from './pages/MyInterviews';
 import Interview from './pages/Interview';
 import InterviewSession from './pages/InterviewSession';
@@ -35,11 +35,11 @@ const AppContent = () => {
               <InterviewSession />
             </ProtectedRoute>
           } />
-          <Route path="/dashboard" element={
+          {/* <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } />
+          } /> */}
           <Route path="/my-interviews" element={
             <ProtectedRoute>
               <MyInterviews />

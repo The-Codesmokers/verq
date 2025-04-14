@@ -205,7 +205,7 @@ function Navbar() {
             Home
           </Link>
         </li>
-        <li>
+        {/* <li>
           <Link 
             to="/dashboard" 
             className={`block px-4 py-2 rounded-full ${
@@ -217,7 +217,7 @@ function Navbar() {
           >
             Dashboard
           </Link>
-        </li>
+        </li> */}
         <li>
           <Link 
             to="/interview" 
@@ -279,7 +279,7 @@ function Navbar() {
                     Home
                   </Link>
                 </li>
-                <li className="flex items-center">
+                {/* <li className="flex items-center">
                   <Link 
                     to="/dashboard" 
                     className={`inline-block px-3 sm:px-4 py-2 rounded-full ${
@@ -290,7 +290,7 @@ function Navbar() {
                   >
                     Dashboard
                   </Link>
-                </li>
+                </li> */}
                 <li className="flex items-center">
                   <Link 
                     to="/interview" 
