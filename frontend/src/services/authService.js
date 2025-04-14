@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '../config/firebase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; // Updated to use environment variable
+const API_URL = import.meta.env.VITE_API_URL || 'https://verq.onrender.com'; // Updated to use environment variable
 
 const saveUserToMongoDB = async (user) => {
     try {

@@ -48,7 +48,7 @@ function Navbar() {
         
         try {
           // Try to get user profile from backend
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/profile`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://verq.onrender.com'}/api/user/profile`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,

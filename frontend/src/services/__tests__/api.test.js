@@ -24,7 +24,7 @@ describe('API Service', () => {
       const response = await api.login(credentials);
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/auth/login',
+        'https://verq.onrender.com/api/auth/login',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(credentials),
@@ -43,7 +43,7 @@ describe('API Service', () => {
       const response = await api.register(userData);
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/auth/register',
+        'https://verq.onrender.com/api/auth/register',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(userData),
@@ -60,7 +60,7 @@ describe('API Service', () => {
       const response = await api.getUserProfile();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/users/profile',
+        'https://verq.onrender.com/api/users/profile',
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: 'Bearer test-token',
@@ -76,7 +76,7 @@ describe('API Service', () => {
       const response = await api.getInterviews();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/interviews',
+        'https://verq.onrender.com/api/interviews',
         expect.any(Object)
       );
       expect(response).toEqual({ data: { message: 'Success' } });
@@ -93,7 +93,7 @@ describe('API Service', () => {
       const response = await api.createInterview(interviewData);
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/interviews',
+        'https://verq.onrender.com/api/interviews',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(interviewData),
