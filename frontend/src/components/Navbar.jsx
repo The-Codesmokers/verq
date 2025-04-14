@@ -183,26 +183,17 @@ function Navbar() {
           </Link>
         </li>
         <li>
-          <button 
-            onClick={() => {
-              toggleTheme();
-              setMenuOpen(false);
-            }}
-            className="w-full flex items-center justify-start px-4 py-2 rounded-full text-gray-800 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5"
+          <Link 
+            to="/my-interviews" 
+            className={`block px-4 py-2 rounded-full ${
+              isActive('/my-interviews') 
+                ? 'bg-black/10 dark:bg-white/10 text-gray-900 dark:text-gray-100' 
+                : 'text-gray-800 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+            onClick={() => setMenuOpen(false)}
           >
-            {darkMode ? 'Light Mode' : 'Dark Mode'}
-            <span className="ml-2">
-              {darkMode ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </span>
-          </button>
+            My Interviews
+          </Link>
         </li>
       </ul>
     </div>
@@ -218,7 +209,7 @@ function Navbar() {
         {/* Left section - Logo */}
         <div className="flex flex-col justify-center">
           <Link to="/" className="group">
-            <h1 className="font-zen font-bold text-2xl text-gray-900 dark:text-gray-100 group-hover:text-pink-500 dark:group-hover:text-pink-400">VerQ</h1>
+            <h1 className="font-zen font-bold text-xl sm:text-2xl text-gray-900 dark:text-gray-100 group-hover:text-pink-500 dark:group-hover:text-pink-400">VerQ</h1>
           </Link>
         </div>
         
@@ -226,11 +217,11 @@ function Navbar() {
         {viewport !== 'mobile' && (
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <div className="bg-black/10 dark:bg-white/10 backdrop-blur-md rounded-full shadow-sm inline-flex items-center border border-gray-300 dark:border-gray-700 p-0.5">
-              <ul className="flex font-chakra font-semibold text-sm items-center">
+              <ul className="flex font-chakra font-semibold text-xs sm:text-sm items-center">
                 <li className="flex items-center">
                   <Link 
                     to="/" 
-                    className={`inline-block px-4 py-2 rounded-full ${
+                    className={`inline-block px-3 sm:px-4 py-2 rounded-full ${
                       isActive('/') 
                         ? 'bg-white dark:bg-black text-gray-900 dark:text-heading backdrop-blur-md' 
                         : 'text-gray-800 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-800/70'
@@ -242,7 +233,7 @@ function Navbar() {
                 <li className="flex items-center">
                   <Link 
                     to="/dashboard" 
-                    className={`inline-block px-4 py-2 rounded-full ${
+                    className={`inline-block px-3 sm:px-4 py-2 rounded-full ${
                       isActive('/dashboard') 
                         ? 'bg-white dark:bg-black text-gray-900 dark:text-heading backdrop-blur-sm' 
                         : 'text-gray-800 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-800/70'
@@ -254,13 +245,13 @@ function Navbar() {
                 <li className="flex items-center">
                   <Link 
                     to="/interview" 
-                    className={`inline-block px-4 py-2 rounded-full ${
+                    className={`inline-block px-3 sm:px-4 py-2 rounded-full ${
                       isActive('/interview') 
                         ? 'bg-white dark:bg-black text-gray-900 dark:text-heading backdrop-blur-sm' 
                         : 'text-gray-800 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-800/70'
                     }`}
                   >
-                    Interview
+                    Take Interview
                   </Link>
                 </li>
               </ul>
@@ -268,43 +259,46 @@ function Navbar() {
           </div>
         )}
         
-        {/* Right section - Profile dropdown and theme toggle on larger screens, Menu button on mobile */}
-        <div className="flex items-center gap-2">
-          
-          
-          {viewport === 'mobile' ? (
-            <>
-              <button 
-                onClick={toggleMenu}
-                className="px-3 py-2 text-gray-900 dark:text-gray-100 rounded-full hover:bg-white/50 dark:hover:bg-gray-800/50"
-                aria-label="Toggle menu"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {menuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                  )}
-                </svg>
-              </button>
-              <MobileMenu />
-            </>
-          ) : (
-            <div className="relative" ref={profileDropdownRef}>
-              <button 
-                onClick={toggleProfile}
-                className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center hover:opacity-90"
-              >
-                <img 
-                  src={profileImage} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover"
-                />
-              </button>
-              <ProfileDropdown />
-            </div>
+        {/* Right section - Profile and Mobile Menu */}
+        <div className="flex items-center space-x-2">
+          {/* Profile button - Always visible */}
+          <div className="relative" ref={profileDropdownRef}>
+            <button 
+              onClick={toggleProfile}
+              className="flex items-center space-x-2 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                {userData?.photoURL ? (
+                  <img 
+                    src={userData.photoURL} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+            </button>
+            <ProfileDropdown />
+          </div>
+
+          {/* Mobile menu button - Only visible on mobile */}
+          {viewport === 'mobile' && (
+            <button 
+              onClick={toggleMenu}
+              className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           )}
         </div>
+        
+        {/* Mobile Menu */}
+        {viewport === 'mobile' && <MobileMenu />}
       </nav>
     </div>
   );
