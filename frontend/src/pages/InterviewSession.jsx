@@ -35,7 +35,7 @@ const ServiceNode = ({ service, status, isActive }) => (
 );
 
 function InterviewSession() {
-  const { interviewId } = useParams();
+  const { interviewId: paramsInterviewId } = useParams();
   const [interview, setInterview] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -51,33 +51,29 @@ function InterviewSession() {
     geminiEvaluation: 'pending'
   });
   const [activeService, setActiveService] = useState(null);
+  const [audioURL, setAudioURL] = useState(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const timerRef = useRef(null);
 
+  // Get the actual interviewId from either params or localStorage
+  const interviewId = paramsInterviewId || (() => {
+    const savedInterview = localStorage.getItem('currentInterview');
+    if (savedInterview) {
+      try {
+        const { id } = JSON.parse(savedInterview);
+        return id;
+      } catch (err) {
+        console.error('Error parsing saved interview:', err);
+        return null;
+      }
+    }
+    return null;
+  })();
+
+  // Fetch interview data and set initial question
   useEffect(() => {
     const fetchInterview = async () => {
       if (!interviewId) {
-        // Try to get interviewId from localStorage
-        const savedInterview = localStorage.getItem('currentInterview');
-        if (savedInterview) {
-          const { id, question } = JSON.parse(savedInterview);
-          if (id) {
-            try {
-              setActiveService('pdfExtraction');
-              setServiceStatus(prev => ({ ...prev, pdfExtraction: 'in_progress' }));
-
-              const { data } = await api.get(`/interview/${id}`);
-              setInterview(data);
-              setCurrentQuestion(question || data.questions?.[data.questions.length - 1]?.question || null);
-              
-              setServiceStatus(prev => ({ ...prev, pdfExtraction: 'completed' }));
-              setActiveService(null);
-              setIsLoading(false);
-              return;
-            } catch (err) {
-              console.error('Error fetching saved interview:', err);
-              localStorage.removeItem('currentInterview');
-            }
-          }
-        }
         setError('No interview ID provided');
         setIsLoading(false);
         return;
@@ -87,9 +83,40 @@ function InterviewSession() {
         setActiveService('pdfExtraction');
         setServiceStatus(prev => ({ ...prev, pdfExtraction: 'in_progress' }));
 
-        const { data } = await api.get(`/interview/${interviewId}`);
+        const { data } = await api.getInterviewById(interviewId);
         setInterview(data);
-        setCurrentQuestion(data.questions?.[data.questions.length - 1]?.question || null);
+        
+        // Set current question only if it's not already set
+        if (!currentQuestion) {
+          // First try to get the last question from the questions array
+          const lastQuestion = data.questions?.[data.questions.length - 1]?.question;
+          if (lastQuestion) {
+            setCurrentQuestion(lastQuestion);
+          } else {
+            // If no questions in the array, try to get the current question from the interview data
+            if (data.currentQuestion) {
+              setCurrentQuestion(data.currentQuestion);
+            } else {
+              // If still no question, try to get it from localStorage
+              const savedInterview = localStorage.getItem('currentInterview');
+              if (savedInterview) {
+                try {
+                  const { question } = JSON.parse(savedInterview);
+                  if (question) {
+                    setCurrentQuestion(question);
+                  } else {
+                    setError('No questions available for this interview');
+                  }
+                } catch (err) {
+                  console.error('Error parsing saved interview:', err);
+                  setError('No questions available for this interview');
+                }
+              } else {
+                setError('No questions available for this interview');
+              }
+            }
+          }
+        }
         
         setServiceStatus(prev => ({ ...prev, pdfExtraction: 'completed' }));
         setActiveService(null);
@@ -101,45 +128,87 @@ function InterviewSession() {
     };
 
     fetchInterview();
-  }, [interviewId]);
+  }, [interviewId]); // Only depend on interviewId
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
+      // Reset states
+      setAudioURL(null);
+      setRecordingTime(0);
       audioChunksRef.current = [];
 
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      mediaRecorderRef.current = mediaRecorder;
+
       mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioURL(url);
         await submitAnswer(audioBlob);
       };
 
-      mediaRecorder.start();
+      // Start recording
+      mediaRecorder.start(1000); // Collect data every second
       setIsRecording(true);
+
+      // Start timer
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
     } catch (err) {
+      console.error('Recording error:', err);
       setError('Failed to start recording. Please check your microphone permissions.');
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      // Stop the media recorder
       mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      
+      // Clear timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
       setIsRecording(false);
     }
   };
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (audioURL) {
+        URL.revokeObjectURL(audioURL);
+      }
+    };
+  }, [audioURL]);
+
   const submitAnswer = async (audioBlob) => {
     try {
+      if (!interviewId) {
+        throw new Error('Interview ID is missing');
+      }
+
       setActiveService('speechToText');
       setServiceStatus(prev => ({ ...prev, speechToText: 'in_progress' }));
 
       const formData = new FormData();
-      formData.append('audio', audioBlob);
+      formData.append('audio', audioBlob, 'recording.webm');
       formData.append('currentQuestion', currentQuestion);
 
       setActiveService('geminiEvaluation');
@@ -149,11 +218,7 @@ function InterviewSession() {
         geminiEvaluation: 'in_progress' 
       }));
 
-      const { data } = await api.post(`/interview/${interviewId}/answer`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const { data } = await api.submitAnswer(interviewId, formData);
 
       setServiceStatus(prev => ({ 
         ...prev, 
@@ -162,16 +227,20 @@ function InterviewSession() {
       }));
       setActiveService('geminiQuestion');
 
-      setCurrentQuestion(data.nextQuestion);
+      // Update current question with the next one
+      if (data.nextQuestion) {
+        setCurrentQuestion(data.nextQuestion);
+      }
       
       // Refresh interview data to show updated questions
-      const { data: updatedInterview } = await api.get(`/interview/${interviewId}`);
+      const { data: updatedInterview } = await api.getInterviewById(interviewId);
       setInterview(updatedInterview);
 
       setServiceStatus(prev => ({ ...prev, geminiQuestion: 'completed' }));
       setActiveService(null);
     } catch (err) {
-      setError(err.message);
+      console.error('Error submitting answer:', err);
+      setError(err.message || 'Failed to submit answer');
       setServiceStatus(prev => ({
         ...prev,
         speechToText: 'pending',
@@ -231,7 +300,7 @@ function InterviewSession() {
                   {currentQuestion}
                 </p>
 
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-4">
                   {!isRecording ? (
                     <motion.button
                       onClick={startRecording}
@@ -247,20 +316,36 @@ function InterviewSession() {
                       Start Recording
                     </motion.button>
                   ) : (
-                    <motion.button
-                      onClick={stopRecording}
-                      className="px-6 py-3 bg-red-500 text-white rounded-full
-                        hover:bg-red-600 transition-colors duration-200
-                        flex items-center gap-2"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                      </svg>
-                      Stop Recording
-                    </motion.button>
+                    <>
+                      <div className="text-center mb-2">
+                        <span className="text-sm text-gray-400">
+                          Recording: {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                        </span>
+                      </div>
+                      <motion.button
+                        onClick={stopRecording}
+                        className="px-6 py-3 bg-red-500 text-white rounded-full
+                          hover:bg-red-600 transition-colors duration-200
+                          flex items-center gap-2 animate-pulse"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                        </svg>
+                        Stop Recording
+                      </motion.button>
+                    </>
+                  )}
+                  
+                  {audioURL && (
+                    <div className="mt-4 w-full max-w-md">
+                      <audio src={audioURL} controls className="w-full" />
+                      <p className="text-sm text-gray-400 text-center mt-2">
+                        Preview your recording before it's processed
+                      </p>
+                    </div>
                   )}
                 </div>
               </motion.div>

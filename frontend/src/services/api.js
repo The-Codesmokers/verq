@@ -19,12 +19,21 @@ const getHeaders = (includeAuth = true) => {
 // Generic fetch function
 const fetchData = async (endpoint, options = {}) => {
   try {
+    // Don't set Content-Type for FormData, let the browser set it automatically
+    const headers = {
+      ...getHeaders(options.includeAuth !== false),
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...options.headers,
+    };
+
+    // Remove Content-Type if it's multipart/form-data as it needs the boundary
+    if (headers['Content-Type'] === 'multipart/form-data') {
+      delete headers['Content-Type'];
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
-      headers: {
-        ...getHeaders(options.includeAuth !== false),
-        ...options.headers,
-      },
+      headers,
       credentials: 'include'
     });
 
@@ -79,6 +88,11 @@ export const api = {
   getInterviewById: (id) => 
     fetchData(`/interview/${id}`),
 
+  generateQuestion: (interviewId) =>
+    fetchData(`/interview/${interviewId}/generate-question`, {
+      method: 'POST'
+    }),
+
   createInterview: async (formData) => {
     const token = localStorage.getItem('firebaseToken');
     if (!token) {
@@ -119,9 +133,7 @@ export const api = {
     fetchData(`/interview/${interviewId}/answer`, {
       method: 'POST',
       body: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: {}
     }),
 
   // Generic methods for custom endpoints
