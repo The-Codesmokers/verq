@@ -1,9 +1,8 @@
-const gTTS = require('gtts');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
 /**
- * Converts text to speech using Google Text-to-Speech
+ * Mock text-to-speech service that creates an empty audio file
  * 
  * @param {string} text - The text to convert to speech
  * @param {string} outputPath - Where to save the audio file
@@ -12,29 +11,22 @@ const path = require('path');
  */
 async function textToSpeech(text, outputPath, voice = 'en') {
     try {
-        // Ensure output directory exists
+        console.log(`[MOCK TTS] Converting text to speech: "${text.substring(0, 50)}..."`);
+        
+        // Ensure the output directory exists
         const outputDir = path.dirname(outputPath);
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir, { recursive: true });
-        }
-
-        // Create a new gTTS instance with specified voice
-        const gtts = new gTTS(text, voice);
-
-        // Save the audio file
-        await new Promise((resolve, reject) => {
-            gtts.save(outputPath, (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-
+        await fs.mkdir(outputDir, { recursive: true });
+        
+        // Create an empty audio file (1 second of silence)
+        const silenceBuffer = Buffer.alloc(44100 * 2); // 1 second of silence at 44.1kHz, 16-bit
+        
+        // Write the audio file
+        await fs.writeFile(outputPath, silenceBuffer);
+        
+        console.log(`[MOCK TTS] Audio file created at: ${outputPath}`);
         return outputPath;
     } catch (error) {
-        console.error('Error in text-to-speech:', error.message);
+        console.error('Error in mock text-to-speech:', error.message);
         throw error;
     }
 }

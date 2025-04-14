@@ -31,6 +31,11 @@ const userSchema = new mongoose.Schema({
     sparse: true,
     unique: true
   },
+  githubId: {
+    type: String,
+    sparse: true,
+    unique: true
+  },
   password: {
     type: String,
     select: false,
@@ -46,7 +51,7 @@ const userSchema = new mongoose.Schema({
   authMethod: {
     type: String,
     required: true,
-    enum: ['jwt', 'google', 'firebase'],
+    enum: ['jwt', 'google', 'github', 'firebase'],
     default: 'jwt'
   },
   // User data
@@ -107,6 +112,7 @@ userSchema.methods.updateLastLogin = function() {
 userSchema.index({ email: 1 });
 userSchema.index({ uid: 1 }, { sparse: true });
 userSchema.index({ googleId: 1 }, { sparse: true });
+userSchema.index({ githubId: 1 }, { sparse: true });
 
 const User = mongoose.model('User', userSchema);
 

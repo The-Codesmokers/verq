@@ -7,6 +7,7 @@ const router = express.Router();
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/google', authController.googleAuth);
+router.post('/github', authController.githubAuth);
 router.post('/firebase', authController.firebaseAuth);
 
 // Verify token and get user data
