@@ -37,23 +37,72 @@ function Navbar() {
     };
   }, []);
   
-  // Fetch user data when profile dropdown is opened
+  // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
-      if (profileOpen) {
-        try {
-          const response = await api.getUserProfile();
-          if (response.data && response.data.user) {
-            setUserData(response.data.user);
+      try {
+        const token = localStorage.getItem('firebaseToken');
+        console.log('Token found:', token ? 'Yes' : 'No');
+        
+        if (token) {
+          // First try to verify the token
+          console.log('Attempting to verify token...');
+          const verifyResponse = await fetch('http://localhost:3000/api/auth/verify', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+          });
+
+          console.log('Verify response status:', verifyResponse.status);
+          
+          if (verifyResponse.ok) {
+            const verifyData = await verifyResponse.json();
+            console.log('Verify response data:', verifyData);
+            
+            if (verifyData.status === 'success' && verifyData.data && verifyData.data.user) {
+              console.log('Setting user data from verify:', verifyData.data.user);
+              setUserData(verifyData.data.user);
+              return;
+            }
           }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+
+          // If verify fails, try getting user profile
+          console.log('Attempting to fetch user profile...');
+          const profileResponse = await fetch('http://localhost:3000/api/user/profile', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+          });
+
+          console.log('Profile response status:', profileResponse.status);
+          
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            console.log('Profile response data:', profileData);
+            
+            if (profileData.status === 'success' && profileData.data && profileData.data.user) {
+              console.log('Setting user data from profile:', profileData.data.user);
+              setUserData(profileData.data.user);
+            }
+          } else {
+            console.error('Failed to fetch user data:', profileResponse.status);
+            const errorData = await profileResponse.json().catch(() => null);
+            console.error('Error details:', errorData);
+          }
         }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
       }
     };
     
     fetchUserData();
-  }, [profileOpen]);
+  }, []);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -84,17 +133,9 @@ function Navbar() {
 
   const handleSignOut = async () => {
     try {
-      // Clear JWT token from localStorage
-      localStorage.removeItem('token');
-      
-      // Sign out from Firebase if using Firebase auth
-      if (auth.currentUser) {
-        await auth.signOut();
-      }
-      
+      await logout();
       setProfileOpen(false);
-      // You might want to redirect to login page or refresh the page
-      window.location.href = '/login';
+      navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -105,22 +146,14 @@ function Navbar() {
     <div className={`absolute right-0 top-full mt-2 p-5 rounded-xl shadow-lg backdrop-blur-md border border-gray-700 w-[260px] ${profileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-gray-900/90`}>
       <div className="flex flex-col space-y-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
-            {userData?.photoURL ? (
-              <img 
-                src={userData.photoURL} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-              </svg>
-            )}
-          </div>
+          <img 
+            src={profileImage} 
+            alt="Profile" 
+            className="w-10 h-10 rounded-full object-cover"
+          />
           <div>
-            <h3 className="font-montserrat font-semibold text-lg text-gray-100">{userData?.displayName || 'Loading...'}</h3>
-            <p className="text-sm text-gray-400">{userData?.email || 'Loading...'}</p>
+            <h3 className="font-montserrat font-semibold text-lg text-gray-100">{userData?.displayName || 'Guest'}</h3>
+            <p className="text-sm text-gray-400">{userData?.email || ''}</p>
           </div>
         </div>
         
@@ -272,17 +305,11 @@ function Navbar() {
               className="flex items-center space-x-2 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             >
               <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
-                {userData?.photoURL ? (
-                  <img 
-                    src={userData.photoURL} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
-                )}
+                <img 
+                  src={profileImage} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </button>
             <ProfileDropdown />
