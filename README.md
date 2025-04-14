@@ -3,9 +3,9 @@
 VerQ is an AI-powered mock interview platform that generates personalized interview questions based on a user's resume and target role, captures voice responses, and provides AI feedback.
 
 ## Links
-FRONTEND: https://verqai.vercel.app
-BACKEND: https://verq.onrender.com
-PPT: https://www.canva.com/design/DAGkh628bOc/_F6BjT6a8UIxzT5oV7_Swg/edit?utm_content=DAGkh628bOc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+[FRONTEND]([url](https://verqai.vercel.app)), 
+[BACKEND]([url](https://verq.onrender.com)), 
+[PPT](https://www.canva.com/design/DAGkh628bOc/_F6BjT6a8UIxzT5oV7_Swg/edit?utm_content=DAGkh628bOc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) 
 
 
 ## Features
