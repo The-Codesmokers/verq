@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from '../config';
 console.log('API_BASE_URL:', API_BASE_URL);
 
 // Helper function to get headers with authentication
@@ -32,7 +32,11 @@ const fetchData = async (endpoint, options = {}) => {
       delete headers['Content-Type'];
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    // Always add /api prefix to the endpoint
+    const fullEndpoint = `/api${endpoint}`;
+    console.log('Making request to:', `${API_BASE_URL}${fullEndpoint}`);
+    
+    const response = await fetch(`${API_BASE_URL}${fullEndpoint}`, {
       ...options,
       headers,
       credentials: 'include'
@@ -95,10 +99,20 @@ export const api = {
     }),
 
   createInterview: async (formData) => {
-    return await fetchData('/interview/start', {
-      method: 'POST',
-      body: formData
-    });
+    try {
+      const response = await fetchData('/interview/start', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.status !== 'success' || !response.data || !response.data.interviewId) {
+        throw new Error('Invalid response from server');
+      }
+      return response;
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
   },
 
   submitAnswer: async (interviewId, formData) => {

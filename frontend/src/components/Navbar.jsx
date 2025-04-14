@@ -48,37 +48,8 @@ function Navbar() {
         
         try {
           // Try to get user profile from backend
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/profile`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.status === 'success' && data.data && data.data.user) {
-              setUserData(data.data.user);
-            } else {
-              // If backend data not available, use Firebase user data
-              setUserData({
-                displayName: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL,
-                providerData: user.providerData
-              });
-            }
-          } else {
-            // If backend request fails, use Firebase user data
-            setUserData({
-              displayName: user.displayName,
-              email: user.email,
-              photoURL: user.photoURL,
-              providerData: user.providerData
-            });
-          }
+          const userData = await api.getUserProfile();
+          setUserData(userData.data.user);
         } catch (error) {
           console.error('Error fetching user profile:', error);
           // Use Firebase user data as fallback
