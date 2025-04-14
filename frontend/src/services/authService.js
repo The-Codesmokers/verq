@@ -8,7 +8,8 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '../config/firebase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://verq.onrender.com'; // Updated to use environment variable
+// Define the base URL without any /api suffix
+const API_URL = 'https://verq.onrender.com';
 
 const saveUserToMongoDB = async (user) => {
     try {
@@ -79,6 +80,7 @@ export const register = async (displayName, email, password) => {
 
 export const login = async (email, password) => {
     try {
+        console.log('Making login request to:', `${API_URL}/api/auth/login`);
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
             headers: {
@@ -137,6 +139,7 @@ export const signInWithGoogle = async () => {
         const storedToken = localStorage.getItem('firebaseToken');
         console.log('Stored token verification:', storedToken ? 'Success' : 'Failed');
         
+        console.log('Making Google auth request to:', `${API_URL}/api/auth/google`);
         const response = await fetch(`${API_URL}/api/auth/google`, {
             method: 'POST',
             headers: {
@@ -179,6 +182,7 @@ export const signInWithGitHub = async () => {
         localStorage.setItem('firebaseToken', token);
         
         // Check if the user exists in our MongoDB database
+        console.log('Making GitHub auth request to:', `${API_URL}/api/auth/github`);
         const response = await fetch(`${API_URL}/api/auth/github`, {
             method: 'POST',
             headers: {

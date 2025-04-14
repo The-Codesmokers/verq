@@ -1,6 +1,5 @@
-// Remove /api from the end of the URL if it exists
-const baseUrl = import.meta.env.VITE_API_URL || 'https://verq.onrender.com';
-const API_BASE_URL = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
+// Define the base URL without any /api suffix
+const API_BASE_URL = 'https://verq.onrender.com';
 console.log('API_BASE_URL:', API_BASE_URL);
 
 // Helper function to get headers with authentication
@@ -34,8 +33,9 @@ const fetchData = async (endpoint, options = {}) => {
       delete headers['Content-Type'];
     }
 
-    // Check if endpoint already starts with /api to avoid double prefix
-    const fullEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+    // Always add /api prefix to the endpoint
+    const fullEndpoint = `/api${endpoint}`;
+    console.log('Making request to:', `${API_BASE_URL}${fullEndpoint}`);
     
     const response = await fetch(`${API_BASE_URL}${fullEndpoint}`, {
       ...options,
