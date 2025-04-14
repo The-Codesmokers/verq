@@ -248,6 +248,30 @@ function MyInterviews() {
                   score={88}
                   questions={14}
                 />
+                <InterviewCard 
+                  title="Backend Engineer" 
+                  date="September 5, 2023"
+                  score={95}
+                  questions={18}
+                />
+                <InterviewCard 
+                  title="DevOps Engineer" 
+                  date="October 12, 2023"
+                  score={82}
+                  questions={16}
+                />
+                <InterviewCard 
+                  title="Data Scientist" 
+                  date="November 8, 2023"
+                  score={91}
+                  questions={20}
+                />
+                <InterviewCard 
+                  title="Mobile Developer" 
+                  date="December 15, 2023"
+                  score={87}
+                  questions={13}
+                />
               </div>
             </motion.div>
           </div>
