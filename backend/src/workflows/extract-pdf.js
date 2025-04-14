@@ -8,12 +8,19 @@ const { validateConfig } = require('../config/config');
 // Validate environment variables
 validateConfig();
 
-// Get the PDF file path from command line arguments
+// Get the PDF file path and role from command line arguments
 const pdfPath = process.argv[2];
+const role = process.argv[3];
 
 if (!pdfPath) {
   console.error('Please provide a PDF file path as an argument');
-  console.error('Usage: node extract-pdf.js <path-to-pdf>');
+  console.error('Usage: node extract-pdf.js <path-to-pdf> <role>');
+  process.exit(1);
+}
+
+if (!role) {
+  console.error('Please provide a role as an argument');
+  console.error('Usage: node extract-pdf.js <path-to-pdf> <role>');
   process.exit(1);
 }
 
@@ -112,7 +119,7 @@ async function extractAndProcessPDF() {
     // Generate interview question using Gemini
     console.log('\nGenerating interview question...');
     try {
-      const question = await generateInterviewQuestion(extractedText);
+      const question = await generateInterviewQuestion(extractedText, role);
       
       console.log('\nGenerated Interview Question:');
       console.log('----------------------------------------');

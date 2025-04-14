@@ -2,22 +2,26 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { config } = require('../config/config');
 
 /**
- * Generate an interview question based on the resume text using Google's Gemini AI
+ * Generate an interview question based on the resume text and role using Google's Gemini AI
  * @param {string} resumeText - Extracted text from the resume
+ * @param {string} role - The role the candidate is applying for
  * @returns {Promise<string>} - Generated interview question
  */
-async function generateInterviewQuestion(resumeText) {
+async function generateInterviewQuestion(resumeText, role) {
   const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
 
-  const prompt = `Based on the following resume text, generate a single technical interview question. 
+  const prompt = `Based on the following resume text and the role the candidate is applying for, generate a single technical interview question. 
   The question should be moderate to high difficulty and should focus on:
   1. The projects mentioned in the resume
   2. The technical skills listed
   3. The technologies used in their projects
+  4. The specific requirements and responsibilities of the role they're applying for
   
-  The question should test their deep understanding of the technologies and concepts they claim to know.
+  The question should test their deep understanding of the technologies and concepts they claim to know, 
+  while also assessing their fit for the specific role.
   Make the question specific and detailed, requiring them to demonstrate practical knowledge.
   
+  Role: ${role}
   Resume Text:
   ${resumeText}
   
