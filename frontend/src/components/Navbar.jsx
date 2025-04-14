@@ -1,12 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { getUserData } from '../services/userService';
+import { auth } from '../config/firebase';
+import profileImage from '../assets/images/profile.png';
 
 function Navbar() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [viewport, setViewport] = useState('desktop');
+  const [userData, setUserData] = useState(null);
   const { darkMode, toggleTheme } = useTheme();
   const profileDropdownRef = useRef(null);
   
@@ -30,6 +34,20 @@ function Navbar() {
       window.removeEventListener('resize', checkViewport);
     };
   }, []);
+  
+  // Fetch user data when profile dropdown is opened
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (profileOpen) {
+        const data = await getUserData();
+        if (data) {
+          setUserData(data);
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, [profileOpen]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,19 +76,45 @@ function Navbar() {
     setProfileOpen(!profileOpen);
   };
 
+  const handleSignOut = async () => {
+    try {
+      // Clear JWT token from localStorage
+      localStorage.removeItem('token');
+      
+      // Sign out from Firebase if using Firebase auth
+      if (auth.currentUser) {
+        await auth.signOut();
+      }
+      
+      setProfileOpen(false);
+      // You might want to redirect to login page or refresh the page
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   // Profile dropdown component
   const ProfileDropdown = () => (
     <div className={`absolute right-0 top-full mt-2 p-5 rounded-xl shadow-lg backdrop-blur-md border border-gray-200 dark:border-gray-700 w-[260px] ${profileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${darkMode ? 'bg-gray-900/90' : 'bg-white/90'}`}>
       <div className="flex flex-col space-y-4">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
+            {userData?.photoURL ? (
+              <img 
+                src={userData.photoURL} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+            )}
           </div>
           <div>
-            <h3 className="font-montserrat font-semibold text-lg">John Doe</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">john.doe@example.com</p>
+            <h3 className="font-montserrat font-semibold text-lg">{userData?.displayName || 'Loading...'}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{userData?.email || 'Loading...'}</p>
           </div>
         </div>
         
@@ -82,7 +126,10 @@ function Navbar() {
           >
             My Interviews
           </Link>
-          <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+          <button 
+            onClick={handleSignOut}
+            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+          >
             Sign Out
           </button>
         </div>
@@ -246,9 +293,11 @@ function Navbar() {
                 onClick={toggleProfile}
                 className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center hover:opacity-90"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-400 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
+                <img 
+                  src={profileImage} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
               </button>
               <ProfileDropdown />
             </div>
