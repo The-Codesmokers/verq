@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '../config/firebase';
 
-const API_URL = 'http://localhost:3000'; // Updated to match backend port
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; // Updated to use environment variable
 
 const saveUserToMongoDB = async (user) => {
     try {
@@ -172,36 +172,38 @@ export const signInWithGitHub = async () => {
         const result = await signInWithPopup(auth, githubProvider);
         const { user } = result;
         
+        // Get the Firebase ID token
+        const token = await user.getIdToken();
+        
+        // Store token in localStorage
+        localStorage.setItem('firebaseToken', token);
+        
         // Check if the user exists in our MongoDB database
         const response = await fetch(`${API_URL}/api/auth/github`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 uid: user.uid,
                 email: user.email,
                 name: user.displayName,
                 photoURL: user.photoURL,
+                providerData: user.providerData
             }),
         });
 
         if (!response.ok) {
             const errorData = await response.json();
             if (errorData.message === 'Email already registered with different authentication method') {
-                // Handle the case where the email is registered with a different method
                 throw new Error('This email is already registered with a different authentication method. Please use the original method to sign in.');
             }
             throw new Error(errorData.message || 'Failed to authenticate with backend');
         }
 
         const data = await response.json();
-        if (data.token) {
-            localStorage.setItem('token', data.token);
-            return data.data.user;
-        } else {
-            throw new Error('No token received from server');
-        }
+        return data.data.user;
     } catch (error) {
         console.error('GitHub sign-in error:', error);
         if (error.code === 'auth/account-exists-with-different-credential') {

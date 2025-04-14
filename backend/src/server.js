@@ -32,7 +32,7 @@ const upload = multer({
 // Security middleware
 app.use(helmet()); // Adds various HTTP headers for security
 app.use(cors({
-  origin: 'http://localhost:5173', // Only allow your frontend origin
+  origin: ['http://localhost:5173', 'https://verq-ai.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

@@ -5,6 +5,7 @@ import { auth } from '../config/firebase';
 import profileImage from '../assets/images/profile.png';
 import { logout } from '../services/authService';
 import { api } from '../services/api';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function Navbar() {
   const location = useLocation();
@@ -37,17 +38,17 @@ function Navbar() {
     };
   }, []);
   
-  // Fetch user data on component mount
+  // Listen for auth state changes
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem('firebaseToken');
-        console.log('Token found:', token ? 'Yes' : 'No');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in
+        const token = await user.getIdToken();
+        localStorage.setItem('firebaseToken', token);
         
-        if (token) {
-          // First try to verify the token
-          console.log('Attempting to verify token...');
-          const verifyResponse = await fetch('http://localhost:3000/api/auth/verify', {
+        try {
+          // Try to get user profile from backend
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/profile`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -56,52 +57,47 @@ function Navbar() {
             credentials: 'include'
           });
 
-          console.log('Verify response status:', verifyResponse.status);
-          
-          if (verifyResponse.ok) {
-            const verifyData = await verifyResponse.json();
-            console.log('Verify response data:', verifyData);
-            
-            if (verifyData.status === 'success' && verifyData.data && verifyData.data.user) {
-              console.log('Setting user data from verify:', verifyData.data.user);
-              setUserData(verifyData.data.user);
-              return;
-            }
-          }
-
-          // If verify fails, try getting user profile
-          console.log('Attempting to fetch user profile...');
-          const profileResponse = await fetch('http://localhost:3000/api/user/profile', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-          });
-
-          console.log('Profile response status:', profileResponse.status);
-          
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            console.log('Profile response data:', profileData);
-            
-            if (profileData.status === 'success' && profileData.data && profileData.data.user) {
-              console.log('Setting user data from profile:', profileData.data.user);
-              setUserData(profileData.data.user);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'success' && data.data && data.data.user) {
+              setUserData(data.data.user);
+            } else {
+              // If backend data not available, use Firebase user data
+              setUserData({
+                displayName: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL,
+                providerData: user.providerData
+              });
             }
           } else {
-            console.error('Failed to fetch user data:', profileResponse.status);
-            const errorData = await profileResponse.json().catch(() => null);
-            console.error('Error details:', errorData);
+            // If backend request fails, use Firebase user data
+            setUserData({
+              displayName: user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+              providerData: user.providerData
+            });
           }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          // Use Firebase user data as fallback
+          setUserData({
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            providerData: user.providerData
+          });
         }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
+      } else {
+        // User is signed out
+        setUserData(null);
+        localStorage.removeItem('firebaseToken');
       }
-    };
-    
-    fetchUserData();
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
   }, []);
   
   // Close dropdown when clicking outside
@@ -147,13 +143,29 @@ function Navbar() {
       <div className="flex flex-col space-y-4">
         <div className="flex items-center space-x-3">
           <img 
-            src={profileImage} 
+            src={userData?.photoURL || profileImage} 
             alt="Profile" 
             className="w-10 h-10 rounded-full object-cover"
           />
-          <div>
-            <h3 className="font-montserrat font-semibold text-lg text-gray-100">{userData?.displayName || 'Guest'}</h3>
-            <p className="text-sm text-gray-400">{userData?.email || ''}</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-montserrat font-semibold text-lg text-gray-100 truncate">{userData?.displayName || 'Guest'}</h3>
+            <p className="text-sm text-gray-400 truncate" title={userData?.email || ''}>{userData?.email || ''}</p>
+            {userData?.providerData?.[0]?.providerId === 'github.com' && (
+              <a 
+                href={`https://github.com/${userData?.providerData?.[0]?.uid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 mt-1"
+              >
+                <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  />
+                </svg>
+                <span className="truncate">View GitHub Profile</span>
+              </a>
+            )}
           </div>
         </div>
         
