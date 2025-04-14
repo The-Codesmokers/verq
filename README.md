@@ -2,6 +2,9 @@
 
 https://verqai.vercel.app
 
+# PPT link 
+https://www.canva.com/design/DAGkh628bOc/_F6BjT6a8UIxzT5oV7_Swg/edit?utm_content=DAGkh628bOc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
 ## Backend Setup and Running Instructions
 
 ### Prerequisites
