@@ -15,7 +15,7 @@ const API_URL = API_BASE_URL;
 const saveUserToMongoDB = async (user) => {
     try {
         const token = await user.getIdToken();
-        const response = await fetch(`${API_URL}/auth/firebase`, {
+        const response = await fetch(`${API_URL}/api/auth/firebase`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -125,48 +125,39 @@ export const signInWithGoogle = async () => {
     try {
         console.log('Starting Google Sign-In...');
         const result = await signInWithPopup(auth, googleProvider);
-        const { user } = result;
-        console.log('Firebase user:', user);
+        const user = result.user;
         
-        // Get the Firebase ID token
+        // Store the Firebase ID token
         const token = await user.getIdToken();
-        console.log('Firebase ID Token:', token);
-        
-        // Store token in localStorage
         localStorage.setItem('firebaseToken', token);
-        console.log('Token stored in localStorage');
         
-        // Verify token was stored
-        const storedToken = localStorage.getItem('firebaseToken');
-        console.log('Stored token verification:', storedToken ? 'Success' : 'Failed');
-        
-        console.log('Making Google auth request to:', `${API_URL}/auth/google`);
-        const response = await fetch(`${API_URL}/auth/google`, {
+        // Save user to MongoDB
+        console.log('Making Google auth request to:', `${API_URL}/api/auth/google`);
+        const response = await fetch(`${API_URL}/api/auth/google`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 uid: user.uid,
                 email: user.email,
-                name: user.displayName,
-                photoURL: user.photoURL,
+                displayName: user.displayName,
+                photoURL: user.photoURL
             }),
+            credentials: 'include'
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to authenticate with backend');
+            const errorData = await response.json().catch(() => ({ message: 'Network response was not ok' }));
+            throw new Error(errorData.message || 'Google authentication failed');
         }
 
         const data = await response.json();
-        console.log('Backend response:', data);
         return data.data.user;
     } catch (error) {
         console.error('Google sign-in error:', error);
-        // Clear token on error
-        localStorage.removeItem('firebaseToken');
         throw error;
     }
 };
