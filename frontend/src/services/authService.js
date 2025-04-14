@@ -1,12 +1,13 @@
 import { 
     GoogleAuthProvider, 
     signInWithPopup, 
-    signOut 
+    signOut,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { auth, googleProvider } from '../config/firebase';
 
-const googleProvider = new GoogleAuthProvider();
-const API_URL = 'http://localhost:3000'; // Updated to match the backend port
+const API_URL = 'http://localhost:3000'; // Updated to match backend port
 
 const saveUserToMongoDB = async (user) => {
     try {
@@ -43,40 +44,49 @@ const saveUserToMongoDB = async (user) => {
     }
 };
 
-export const signInWithGoogle = async () => {
+export const register = async (displayName, email, password) => {
     try {
-        const result = await signInWithPopup(auth, googleProvider);
-        // Try to save user data to MongoDB but don't block sign-in if it fails
-        const savedUser = await saveUserToMongoDB(result.user);
-        if (!savedUser) {
-            console.warn('User authenticated but data not saved to MongoDB');
+        const response = await fetch(`${API_URL}/api/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                displayName,
+                email,
+                password
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Registration failed');
         }
-        return result.user;
+
+        const data = await response.json();
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            return data.data.user;
+        } else {
+            throw new Error('No token received from server');
+        }
     } catch (error) {
-        console.error('Error signing in with Google:', error);
-        throw new Error(error.message || 'Failed to sign in with Google');
+        console.error('Registration error:', error);
+        throw error;
     }
 };
 
-export const logout = async () => {
-    try {
-        await signOut(auth);
-    } catch (error) {
-        console.error('Error signing out:', error);
-        throw new Error(error.message || 'Failed to sign out');
-    }
-};
-
-export const loginWithEmailPassword = async (email, password) => {
+export const login = async (email, password) => {
     try {
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
             },
-            body: JSON.stringify({ email, password }),
-            credentials: 'include' // Important for handling JWT cookies
+            body: JSON.stringify({
+                email,
+                password,
+            }),
         });
 
         if (!response.ok) {
@@ -85,11 +95,60 @@ export const loginWithEmailPassword = async (email, password) => {
         }
 
         const data = await response.json();
-        // Store the JWT token in localStorage or secure cookie
-        localStorage.setItem('token', data.token);
-        return data.user;
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            return data.data.user;
+        } else {
+            throw new Error('No token received from server');
+        }
     } catch (error) {
-        console.error('Error logging in:', error);
+        console.error('Login error:', error);
+        throw error;
+    }
+};
+
+export const logout = async () => {
+    try {
+        await signOut(auth);
+        localStorage.removeItem('token');
+    } catch (error) {
+        console.error('Logout error:', error);
+        throw error;
+    }
+};
+
+export const signInWithGoogle = async () => {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const { user } = result;
+        
+        const response = await fetch(`${API_URL}/api/auth/google`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName,
+                photoURL: user.photoURL,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to authenticate with backend');
+        }
+
+        const data = await response.json();
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            return data.data.user;
+        } else {
+            throw new Error('No token received from server');
+        }
+    } catch (error) {
+        console.error('Google sign-in error:', error);
         throw error;
     }
 };

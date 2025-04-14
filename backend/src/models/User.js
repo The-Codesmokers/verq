@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const validator = require('validator');
 
 const userSchema = new mongoose.Schema({
-  // Common fields for both auth methods
+  // Common fields for all auth methods
   email: {
     type: String,
     required: true,
@@ -20,21 +20,25 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'https://www.gravatar.com/avatar/?d=mp'
   },
-  // Firebase specific fields
+  // Authentication fields
   uid: {
     type: String,
     sparse: true,
     unique: true
   },
-  // JWT specific fields
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true
+  },
   password: {
     type: String,
-    select: false, // Don't include password in queries by default
+    select: false,
     minlength: [8, 'Password must be at least 8 characters long'],
     validate: {
       validator: function(password) {
-        // Only require password for JWT users (no uid)
-        return this.uid || password.length >= 8;
+        // Only require password for JWT users
+        return this.authMethod === 'jwt' ? password.length >= 8 : true;
       },
       message: 'Password is required for email/password login'
     }
@@ -42,10 +46,10 @@ const userSchema = new mongoose.Schema({
   authMethod: {
     type: String,
     required: true,
-    enum: ['jwt', 'firebase'],
+    enum: ['jwt', 'google'],
     default: 'jwt'
   },
-  // Common user data
+  // User data
   role: {
     type: String,
     enum: ['user', 'admin'],
@@ -69,7 +73,7 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Update the updatedAt timestamp on save
+// Update timestamps
 userSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
@@ -77,11 +81,9 @@ userSchema.pre('save', function(next) {
 
 // Hash password before saving (only for JWT users)
 userSchema.pre('save', async function(next) {
-  // Only hash the password if it has been modified (or is new) and if it's a JWT user
-  if (!this.isModified('password') || this.authMethod === 'firebase') return next();
+  if (!this.isModified('password') || this.authMethod !== 'jwt') return next();
   
   try {
-    // Hash password with cost of 12
     this.password = await bcrypt.hash(this.password, 12);
     next();
   } catch (error) {
@@ -91,7 +93,7 @@ userSchema.pre('save', async function(next) {
 
 // Method to check if password is correct (for JWT users)
 userSchema.methods.correctPassword = async function(candidatePassword) {
-  if (this.authMethod === 'firebase') return false;
+  if (this.authMethod !== 'jwt') return false;
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -101,9 +103,10 @@ userSchema.methods.updateLastLogin = function() {
   return this.save();
 };
 
-// Create indexes (removed duplicate declarations)
+// Create indexes
 userSchema.index({ email: 1 });
 userSchema.index({ uid: 1 }, { sparse: true });
+userSchema.index({ googleId: 1 }, { sparse: true });
 
 const User = mongoose.model('User', userSchema);
 

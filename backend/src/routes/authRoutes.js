@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/google', authController.googleAuth);
 
 // Verify token and get user data
 router.get('/verify', authMiddleware, async (req, res) => {

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
+import { signInWithGoogle, register } from "../services/authService";
 
 const Register = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
@@ -33,37 +34,27 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          name,
-          email,
-          password
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
-      // Store the token in localStorage
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        // Redirect to dashboard or home page
-        navigate('/');
-      } else {
-        throw new Error('No token received from server');
-      }
+      await register(displayName, email, password);
+      navigate('/');
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to register. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const user = await signInWithGoogle();
+      if (user) {
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Google sign-in error:', err);
+      setError(err.message || 'Failed to sign in with Google');
     } finally {
       setLoading(false);
     }
@@ -89,14 +80,14 @@ const Register = () => {
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-1">
+              <label htmlFor="displayName" className="block text-sm font-medium text-gray-200 mb-1">
                 Full Name
               </label>
               <input
                 type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full px-4 py-2 rounded-[0.5rem] bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your full name"
                 required
@@ -186,6 +177,28 @@ const Register = () => {
               {loading ? "Registering..." : "Register"}
             </button>
           </form>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-[#020202]/20 text-gray-400">Or continue with</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-white/5 hover:bg-white/10 text-white font-medium rounded-[0.5rem] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
+              />
+            </svg>
+            Sign up with Google
+          </button>
           <p className="mt-4 text-center text-gray-400">
             Already have an account?{" "}
             <Link to="/login" className="text-purple-500 hover:text-purple-400 font-medium">
