@@ -66,8 +66,11 @@ function MyInterviews() {
   const canvasRef = useRef(null);
   const beamsRef = useRef([]);
   const animationFrameRef = useRef(0);
-  const MINIMUM_BEAMS = 20;
+  const MINIMUM_BEAMS = 10;
   const intensity = "medium";
+  const lastTimeRef = useRef(0);
+  const fps = 60;
+  const frameInterval = 1000 / fps;
 
   const opacityMap = {
     subtle: 0.7,
@@ -122,32 +125,17 @@ function MyInterviews() {
       ctx.translate(beam.x, beam.y);
       ctx.rotate((beam.angle * Math.PI) / 180);
 
-      // Calculate pulsing opacity
       const pulsingOpacity =
         beam.opacity *
         (0.8 + Math.sin(beam.pulse) * 0.2) *
         opacityMap[intensity];
 
       const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
-
-      // Enhanced gradient with multiple color stops
       gradient.addColorStop(0, `hsla(${beam.hue}, 85%, 65%, 0)`);
-      gradient.addColorStop(
-        0.1,
-        `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity * 0.5})`
-      );
-      gradient.addColorStop(
-        0.4,
-        `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity})`
-      );
-      gradient.addColorStop(
-        0.6,
-        `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity})`
-      );
-      gradient.addColorStop(
-        0.9,
-        `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity * 0.5})`
-      );
+      gradient.addColorStop(0.1, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity * 0.5})`);
+      gradient.addColorStop(0.4, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity})`);
+      gradient.addColorStop(0.6, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity})`);
+      gradient.addColorStop(0.9, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity * 0.5})`);
       gradient.addColorStop(1, `hsla(${beam.hue}, 85%, 65%, 0)`);
 
       ctx.fillStyle = gradient;
@@ -155,8 +143,15 @@ function MyInterviews() {
       ctx.restore();
     }
 
-    function animate() {
+    function animate(currentTime) {
       if (!canvas || !ctx) return;
+
+      // Frame rate limiting
+      if (currentTime - lastTimeRef.current < frameInterval) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastTimeRef.current = currentTime;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.filter = "blur(35px)";
@@ -166,7 +161,6 @@ function MyInterviews() {
         beam.y -= beam.speed;
         beam.pulse += beam.pulseSpeed;
 
-        // Reset beam when it goes off screen
         if (beam.y + beam.length < -100) {
           resetBeam(beam, index, totalBeams);
         }
@@ -177,7 +171,7 @@ function MyInterviews() {
       animationFrameRef.current = requestAnimationFrame(animate);
     }
 
-    animate();
+    animationFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener("resize", updateCanvasSize);
@@ -188,7 +182,7 @@ function MyInterviews() {
   }, []);
 
   return (
-    <div className="pt-20 sm:pt-24 md:pt-28"> {/* Increased padding top to account for navbar */}
+    <div className="pt-20 sm:pt-24 md:pt-28">
       <div className="relative min-h-screen w-full overflow-hidden bg-background">
         <canvas
           ref={canvasRef}
@@ -217,7 +211,7 @@ function MyInterviews() {
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-semibold text-heading tracking-tighter font-zen text-left"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
             >
               My Interviews
             </motion.h1>
@@ -226,7 +220,7 @@ function MyInterviews() {
               className="mt-4 sm:mt-8 w-full"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
             >
               {/* Interview Cards Section */}
               <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
