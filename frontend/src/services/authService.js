@@ -7,9 +7,10 @@ import {
     GithubAuthProvider
 } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '../config/firebase';
+import { API_BASE_URL } from '../config';
 
-// Define the base URL without any /api suffix
-const API_URL = 'https://verq.onrender.com';
+// Use the imported API_BASE_URL
+const API_URL = API_BASE_URL;
 
 const saveUserToMongoDB = async (user) => {
     try {

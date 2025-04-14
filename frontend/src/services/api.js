@@ -1,5 +1,4 @@
-// Define the base URL without any /api suffix
-const API_BASE_URL = 'https://verq.onrender.com';
+import { API_BASE_URL } from '../config';
 console.log('API_BASE_URL:', API_BASE_URL);
 
 // Helper function to get headers with authentication
