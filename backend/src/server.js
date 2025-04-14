@@ -8,15 +8,34 @@ const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const interviewRoutes = require('./routes/interviewRoutes');
 
 const app = express();
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF and audio files are allowed.'));
+    }
+  }
+});
 
 // Security middleware
 app.use(helmet()); // Adds various HTTP headers for security
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Rate limiting
@@ -38,6 +57,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/interview', interviewRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -57,6 +78,13 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   
   // Handle specific error types
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      status: 'error',
+      message: err.message || 'File upload error'
+    });
+  }
+
   if (err instanceof mongoose.Error.ValidationError) {
     return res.status(400).json({
       status: 'error',

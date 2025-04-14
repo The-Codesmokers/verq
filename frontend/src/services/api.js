@@ -2,15 +2,15 @@ const API_BASE_URL = 'http://localhost:3000/api';
 
 // Helper function to get headers with authentication
 const getHeaders = (includeAuth = true) => {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
+  const headers = {};
 
   if (includeAuth) {
-    const token = localStorage.getItem('token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    const token = localStorage.getItem('firebaseToken');
+    if (!token) {
+      console.error('No authentication token found');
+      throw new Error('No token provided');
     }
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   return headers;
@@ -25,10 +25,16 @@ const fetchData = async (endpoint, options = {}) => {
         ...getHeaders(options.includeAuth !== false),
         ...options.headers,
       },
+      credentials: 'include'
     });
 
     if (!response.ok) {
       const errorData = await response.json();
+      if (response.status === 401) {
+        // Clear token and redirect to login on unauthorized
+        localStorage.removeItem('firebaseToken');
+        window.location.href = '/login';
+      }
       throw new Error(errorData.message || 'Something went wrong');
     }
 
@@ -58,44 +64,73 @@ export const api = {
 
   // User
   getUserProfile: () => 
-    fetchData('/users/profile'),
+    fetchData('/user/profile'),
 
   updateUserProfile: (userData) => 
-    fetchData('/users/profile', {
+    fetchData('/user/profile', {
       method: 'PUT',
       body: JSON.stringify(userData),
     }),
 
   // Interviews
   getInterviews: () => 
-    fetchData('/interviews'),
+    fetchData('/interview'),
 
   getInterviewById: (id) => 
-    fetchData(`/interviews/${id}`),
+    fetchData(`/interview/${id}`),
 
-  createInterview: (interviewData) => 
-    fetchData('/interviews', {
+  createInterview: async (formData) => {
+    const token = localStorage.getItem('firebaseToken');
+    if (!token) {
+      throw new Error('No token provided');
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/interview/start`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          localStorage.removeItem('firebaseToken');
+          window.location.href = '/login';
+        }
+        throw new Error(errorData.message || 'Something went wrong');
+      }
+
+      const data = await response.json();
+      if (data.status !== 'success' || !data.data || !data.data.interviewId) {
+        throw new Error('Invalid response from server');
+      }
+      return data;
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  },
+
+  submitAnswer: (interviewId, formData) =>
+    fetchData(`/interview/${interviewId}/answer`, {
       method: 'POST',
-      body: JSON.stringify(interviewData),
-    }),
-
-  updateInterview: (id, interviewData) => 
-    fetchData(`/interviews/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(interviewData),
-    }),
-
-  deleteInterview: (id) => 
-    fetchData(`/interviews/${id}`, {
-      method: 'DELETE',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     }),
 
   // Generic methods for custom endpoints
   get: (endpoint) => fetchData(endpoint),
-  post: (endpoint, data) => 
+  post: (endpoint, data, options = {}) => 
     fetchData(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
+      ...options
     }),
   put: (endpoint, data) => 
     fetchData(endpoint, {
