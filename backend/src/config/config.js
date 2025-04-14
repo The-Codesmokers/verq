@@ -28,13 +28,10 @@ const config = {
     password: process.env.DB_PASSWORD,
   },
   */
-  // JWT configuration (commented out for future use)
-  /*
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || '24h',
   },
-  */
 };
 
 // Validate required environment variables
@@ -42,6 +39,7 @@ function validateConfig() {
   const requiredEnvVars = [
     'GEMINI_API_KEY',
     'DEEPGRAM_API_KEY',
+    'JWT_SECRET',
   ];
 
   const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
