@@ -7,6 +7,7 @@ import {
     GithubAuthProvider
 } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '../config/firebase';
+import { API_BASE_URL } from '../config';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; // Updated to use environment variable
 
@@ -249,6 +250,7 @@ export const getCurrentUser = () => {
 export const login = async (email, password) => {
     logAuthService('Starting login', { email });
     try {
+        console.log('Making login request to:', `${API_URL}/api/auth/login`);
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
             headers: {
@@ -310,30 +312,29 @@ export const signInWithGoogle = async () => {
         const { user } = result;
         logAuthService('Google sign-in successful', { uid: user.uid });
         
-        // Get the Firebase ID token
+        // Store the Firebase ID token
         const token = await user.getIdToken();
         logAuthService('Got Firebase ID token', { tokenLength: token.length });
         
         // Store token in localStorage
         localStorage.setItem('firebaseToken', token);
-        console.log('Token stored in localStorage');
         
-        // Verify token was stored
-        const storedToken = localStorage.getItem('firebaseToken');
-        console.log('Stored token verification:', storedToken ? 'Success' : 'Failed');
-        
+        // Save user to MongoDB
+        console.log('Making Google auth request to:', `${API_URL}/api/auth/google`);
         const response = await fetch(`${API_URL}/api/auth/google`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 uid: user.uid,
                 email: user.email,
-                name: user.displayName,
-                photoURL: user.photoURL,
+                displayName: user.displayName,
+                photoURL: user.photoURL
             }),
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -374,7 +375,8 @@ export const signInWithGitHub = async () => {
         localStorage.setItem('firebaseToken', token);
         
         // Check if the user exists in our MongoDB database
-        const response = await fetch(`${API_URL}/api/auth/github`, {
+        console.log('Making GitHub auth request to:', `${API_URL}/auth/github`);
+        const response = await fetch(`${API_URL}/auth/github`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
