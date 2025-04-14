@@ -5,6 +5,7 @@ const { generateInterviewQuestion, evaluateAnswer, generateFollowUpQuestion } = 
 const { textToSpeech } = require('../services/textToSpeechService');
 const { speechToText } = require('../services/deepgramService');
 const { validateConfig } = require('../config/config');
+const { createInterview, updateInterviewStatus, addQuestionAnswer } = require('../services/interviewService');
 
 // Set environment variables
 // process.env.GEMINI_API_KEY = 'AIzaSyDQekyR-NW55U8gWW_9Rzu_PojkivR0UA0';
@@ -15,52 +16,31 @@ validateConfig();
 
 /**
  * Main interview flow function
+ * @param {string} userId - The ID of the user
  * @param {string} pdfPath - Path to the PDF resume file
+ * @param {string} role - The role the candidate is applying for
  * @param {string} [audioPath] - Optional path to the audio response file
  * @returns {Promise<Object>} - The interview results
  */
-async function runInterviewFlow(pdfPath, audioPath = "C:\\Users\\amana\\Repos\\verq\\audio-sample.mp3") {
+async function runInterviewFlow(userId, pdfPath, role, audioPath = "C:\\Users\\amana\\Repos\\verq\\audio-sample.mp3") {
+  let interview;
   try {
-    // Validate PDF path
-    if (!pdfPath) {
-      throw new Error('Please provide a PDF file path as an argument');
-    }
-    if (!fs.existsSync(pdfPath)) {
-      throw new Error(`File not found: ${pdfPath}`);
-    }
-
-    // Create output directory if it doesn't exist
-    const outputDir = path.join(__dirname, '..', 'output');
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    // Generate timestamp for unique filenames
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const originalFileName = path.basename(pdfPath, '.pdf');
-
-    // Step 1: Extract text from PDF
-    console.log(`\nProcessing PDF: ${pdfPath}`);
+    // Read the PDF file
     const pdfBuffer = fs.readFileSync(pdfPath);
-    const resumeText = await processPDF(pdfBuffer);
-    
-    // Save the extracted text
-    const textOutputPath = path.join(outputDir, `${originalFileName}_${timestamp}.txt`);
-    fs.writeFileSync(textOutputPath, resumeText);
-    console.log(`\nExtracted text saved to: ${textOutputPath}`);
 
-    const interviewResults = {
-      resumeText,
-      textOutputPath,
-      questions: [],
-      responses: [],
-      evaluations: []
-    };
+    // Create new interview instance with extracted resume text
+    interview = await createInterview(userId, role, pdfBuffer);
+    console.log(`Created new interview with ID: ${interview._id}`);
+
+    // Update interview status to in_progress
+    await updateInterviewStatus(interview._id, 'in_progress');
 
     // Generate initial question
-    console.log('\nGenerating initial interview question...');
-    let currentQuestion = await generateInterviewQuestion(resumeText);
-    interviewResults.questions.push(currentQuestion);
+    const currentQuestion = await generateInterviewQuestion(interview.resumeText, role);
+    
+    // Convert question to speech
+    const questionAudioPath = path.join(path.dirname(audioPath), `question_${Date.now()}.mp3`);
+    await textToSpeech(currentQuestion, questionAudioPath);
 
     // Process 5 questions
     for (let i = 0; i < 5; i++) {
@@ -69,31 +49,14 @@ async function runInterviewFlow(pdfPath, audioPath = "C:\\Users\\amana\\Repos\\v
       console.log(currentQuestion);
       console.log('----------------------------------------');
 
-      // Convert question to speech
-      console.log('\nConverting question to speech...');
-      const questionAudioPath = path.join(outputDir, `${originalFileName}_question_${i + 1}_${timestamp}.mp3`);
-      await textToSpeech(currentQuestion, questionAudioPath, 'en-us');
-      console.log(`\nQuestion audio saved to: ${questionAudioPath}`);
-
       // Process the audio response
       console.log('\nProcessing audio response...');
-      if (!fs.existsSync(audioPath)) {
-        throw new Error(`Audio file not found: ${audioPath}`);
-      }
-
-      // Convert response to text
-      console.log('\nConverting response to text...');
       const responseBuffer = fs.readFileSync(audioPath);
       const transcript = await speechToText(responseBuffer);
       console.log('\nTranscribed Response:');
       console.log('----------------------------------------');
       console.log(transcript);
       console.log('----------------------------------------');
-
-      // Save the transcript
-      const transcriptPath = path.join(outputDir, `${originalFileName}_transcript_${i + 1}_${timestamp}.txt`);
-      fs.writeFileSync(transcriptPath, transcript);
-      console.log(`\nTranscript saved to: ${transcriptPath}`);
 
       // Evaluate the answer
       console.log('\nEvaluating answer...');
@@ -103,37 +66,34 @@ async function runInterviewFlow(pdfPath, audioPath = "C:\\Users\\amana\\Repos\\v
       console.log(JSON.stringify(evaluation, null, 2));
       console.log('----------------------------------------');
 
-      // Save the evaluation
-      const evaluationPath = path.join(outputDir, `${originalFileName}_evaluation_${i + 1}_${timestamp}.json`);
-      fs.writeFileSync(evaluationPath, JSON.stringify(evaluation, null, 2));
-      console.log(`\nEvaluation saved to: ${evaluationPath}`);
-
-      // Store results
-      interviewResults.responses.push({
-        transcript,
-        transcriptPath,
-        audioPath
-      });
-      interviewResults.evaluations.push({
-        evaluation,
-        evaluationPath
-      });
+      // Save question, answer, and evaluation
+      await addQuestionAnswer(interview._id, currentQuestion, transcript, evaluation);
 
       // Generate follow-up question if not the last question
       if (i < 4) {
         console.log('\nGenerating follow-up question...');
-        currentQuestion = await generateFollowUpQuestion(
-          resumeText,
+        const followUpQuestion = await generateFollowUpQuestion(
+          interview.resumeText,
           currentQuestion,
           transcript,
           evaluation
         );
-        interviewResults.questions.push(currentQuestion);
+        currentQuestion = followUpQuestion;
       }
     }
 
-    return interviewResults;
+    // Update interview status to completed
+    await updateInterviewStatus(interview._id, 'completed');
+
+    return {
+      interviewId: interview._id,
+      status: 'completed'
+    };
   } catch (error) {
+    // Update interview status to cancelled if there's an error
+    if (interview) {
+      await updateInterviewStatus(interview._id, 'cancelled');
+    }
     console.error('Error in interview flow:', error.message);
     throw error;
   }
@@ -190,9 +150,11 @@ async function processAudioResponse(audioPath) {
 
 // If this file is run directly, execute the flow
 if (require.main === module) {
-  const pdfPath = process.argv[2];
-  const audioPath = process.argv[3] || "C:\\Users\\amana\\Repos\\verq\\audio-sample.mp3";
-  runInterviewFlow(pdfPath, audioPath)
+  const userId = process.argv[2];
+  const pdfPath = process.argv[3];
+  const role = process.argv[4];
+  const audioPath = process.argv[5] || "C:\\Users\\amana\\Repos\\verq\\audio-sample.mp3";
+  runInterviewFlow(userId, pdfPath, role, audioPath)
     .then(() => process.exit(0))
     .catch(error => {
       console.error(error);
