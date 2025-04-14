@@ -253,17 +253,17 @@ function InterviewSession() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pt-32 px-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen pt-20 sm:pt-32 px-4 sm:px-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen pt-32 px-8">
+      <div className="min-h-screen pt-20 sm:pt-32 px-4 sm:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-center">
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-center text-sm sm:text-base">
             {error}
           </div>
         </div>
@@ -272,31 +272,31 @@ function InterviewSession() {
   }
 
   return (
-    <div className="min-h-screen pt-32 px-8">
+    <div className="min-h-screen pt-20 sm:pt-32 px-4 sm:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Left Section - Interview Content */}
-          <div className="lg:col-span-2 space-y-8">
-            <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-8">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-8">
+            <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-4 sm:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 sm:mb-4">
                 Interview for {interview?.jobRole}
               </h2>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 Status: {interview?.status}
               </div>
             </div>
 
             {currentQuestion && (
               <motion.div 
-                className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-8"
+                className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-4 sm:p-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-4">
                   Current Question
                 </h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-6">
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4 sm:mb-6">
                   {currentQuestion}
                 </p>
 
@@ -304,13 +304,13 @@ function InterviewSession() {
                   {!isRecording ? (
                     <motion.button
                       onClick={startRecording}
-                      className="px-6 py-3 bg-indigo-500 text-white rounded-full
+                      className="px-4 sm:px-6 py-2 sm:py-3 bg-indigo-500 text-white rounded-full
                         hover:bg-indigo-600 transition-colors duration-200
-                        flex items-center gap-2"
+                        flex items-center gap-2 text-sm sm:text-base"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                       </svg>
                       Start Recording
@@ -324,13 +324,13 @@ function InterviewSession() {
                       </div>
                       <motion.button
                         onClick={stopRecording}
-                        className="px-6 py-3 bg-red-500 text-white rounded-full
+                        className="px-4 sm:px-6 py-2 sm:py-3 bg-red-500 text-white rounded-full
                           hover:bg-red-600 transition-colors duration-200
-                          flex items-center gap-2 animate-pulse"
+                          flex items-center gap-2 text-sm sm:text-base animate-pulse"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                         </svg>
@@ -385,15 +385,15 @@ function InterviewSession() {
             ))}
           </div>
 
-          {/* Right Section - Service Nodes */}
-          <div className="space-y-4">
-            <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          {/* Right Section - Service Status */}
+          <div className="space-y-4 sm:space-y-8">
+            <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-4 sm:p-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Service Status
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <ServiceNode 
-                  service="PDF Processing" 
+                  service="PDF Extraction" 
                   status={serviceStatus.pdfExtraction} 
                   isActive={activeService === 'pdfExtraction'} 
                 />
@@ -403,17 +403,12 @@ function InterviewSession() {
                   isActive={activeService === 'geminiQuestion'} 
                 />
                 <ServiceNode 
-                  service="Text to Speech" 
-                  status={serviceStatus.textToSpeech} 
-                  isActive={activeService === 'textToSpeech'} 
-                />
-                <ServiceNode 
                   service="Speech to Text" 
                   status={serviceStatus.speechToText} 
                   isActive={activeService === 'speechToText'} 
                 />
                 <ServiceNode 
-                  service="Answer Evaluation" 
+                  service="Evaluation" 
                   status={serviceStatus.geminiEvaluation} 
                   isActive={activeService === 'geminiEvaluation'} 
                 />

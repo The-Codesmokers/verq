@@ -29,31 +29,31 @@ function InterviewCard({ title, date, score, questions }) {
   
   return (
     <motion.div 
-      className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-8 relative overflow-hidden"
+      className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 md:p-8 relative overflow-hidden"
       whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
     >
-      <div className="absolute top-0 right-0 w-32 h-32 -mr-10 -mt-10 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 blur-3xl"></div>
+      <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 -mr-8 sm:-mr-10 -mt-8 sm:-mt-10 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 blur-3xl"></div>
       
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-          <h3 className="text-2xl font-chakra font-semibold text-heading mb-2">{title}</h3>
-          <p className="text-sm text-paragraph mb-4 md:mb-0">{date}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
+          <h3 className="text-xl sm:text-2xl font-chakra font-semibold text-heading mb-1 sm:mb-2">{title}</h3>
+          <p className="text-xs sm:text-sm text-paragraph">{date}</p>
         </div>
         
-        <div className="flex items-center bg-white/5 backdrop-blur-md px-4 py-2 rounded-full">
-          <div className="text-3xl font-bold text-heading mr-2">{score}%</div>
-          <div className="text-sm text-paragraph">{questions} questions</div>
+        <div className="flex items-center bg-white/5 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
+          <div className="text-2xl sm:text-3xl font-bold text-heading mr-2">{score}%</div>
+          <div className="text-xs sm:text-sm text-paragraph">{questions} questions</div>
         </div>
       </div>
       
-      <div className="mt-6 mb-6">
-        <div className="w-full bg-gray-700/30 rounded-full h-3 overflow-hidden">
+      <div className="mt-4 sm:mt-6 mb-4 sm:mb-6">
+        <div className="w-full bg-gray-700/30 rounded-full h-2 sm:h-3 overflow-hidden">
           <div className={`h-full ${progressColor}`} style={{ width: `${score}%` }}></div>
         </div>
       </div>
       
       <div className="flex justify-end">
-        <button className="py-2 px-6 bg-white/10 hover:bg-white/15 rounded-full text-sm font-medium text-heading transition-colors">
+        <button className="py-1.5 sm:py-2 px-4 sm:px-6 bg-white/10 hover:bg-white/15 rounded-full text-xs sm:text-sm font-medium text-heading transition-colors">
           View Details
         </button>
       </div>
@@ -188,7 +188,7 @@ function MyInterviews() {
   }, []);
 
   return (
-    <div className="pt-16"> {/* Add padding top to account for navbar */}
+    <div className="pt-20 sm:pt-24 md:pt-28"> {/* Increased padding top to account for navbar */}
       <div className="relative min-h-screen w-full overflow-hidden bg-background">
         <canvas
           ref={canvasRef}
@@ -211,10 +211,10 @@ function MyInterviews() {
           }}
         />
 
-        <div className="relative z-10 flex min-h-screen w-full items-center justify-start">
-          <div className="flex flex-col items-start justify-center gap-6 px-8 md:px-16 w-full max-w-7xl mx-auto">
+        <div className="relative z-10 flex min-h-screen w-full items-start justify-start">
+          <div className="flex flex-col items-start justify-start gap-4 sm:gap-6 px-4 sm:px-8 md:px-16 w-full max-w-7xl mx-auto mt-4 sm:mt-6">
             <motion.h1
-              className="text-5xl md:text-6xl lg:text-7xl font-semibold text-heading tracking-tighter font-zen text-left"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-semibold text-heading tracking-tighter font-zen text-left"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -223,13 +223,13 @@ function MyInterviews() {
             </motion.h1>
             
             <motion.div
-              className="mt-8 w-full"
+              className="mt-4 sm:mt-8 w-full"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               {/* Interview Cards Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
                 <InterviewCard 
                   title="Frontend Developer" 
                   date="May 15, 2023"
