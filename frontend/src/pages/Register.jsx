@@ -197,8 +197,8 @@ const Register = () => {
 
       <style jsx>{`
         .glass-card {
-          background: rgba(2, 2, 2, 0.12);
-          backdrop-filter: blur(10px);
+          background: rgba(2, 2, 2, 0.2);
+          backdrop-filter: blur(50px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 1rem;
         }

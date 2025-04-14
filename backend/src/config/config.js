@@ -7,6 +7,9 @@ const config = {
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
   },
+  deepgram: {
+    apiKey: process.env.DEEPGRAM_API_KEY,
+  },
   server: {
     port: process.env.PORT || 3000,
     nodeEnv: process.env.NODE_ENV || 'development',
@@ -38,6 +41,7 @@ const config = {
 function validateConfig() {
   const requiredEnvVars = [
     'GEMINI_API_KEY',
+    'DEEPGRAM_API_KEY',
   ];
 
   const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);

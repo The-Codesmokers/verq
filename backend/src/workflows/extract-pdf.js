@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { processPDF } = require('./services/pdfService');
-const { generateInterviewQuestion } = require('./services/geminiService');
-const { validateConfig } = require('./config/config');
+const { processPDF } = require('../services/pdfService');
+const { generateInterviewQuestion } = require('../services/geminiService');
+const { textToSpeech } = require('../services/textToSpeechService');
+const { validateConfig } = require('../config/config');
 
 // Validate environment variables
 validateConfig();
@@ -22,7 +23,7 @@ if (!fs.existsSync(pdfPath)) {
 }
 
 // Create output directory if it doesn't exist
-const outputDir = path.join(__dirname, 'output');
+const outputDir = path.join(__dirname, '..', 'output');
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir);
 }
@@ -97,16 +98,16 @@ async function extractAndProcessPDF() {
     // Generate output filename using timestamp and original filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const originalFileName = path.basename(pdfPath, '.pdf');
-    const outputPath = path.join(outputDir, `${originalFileName}_${timestamp}.txt`);
+    const textOutputPath = path.join(outputDir, `${originalFileName}_${timestamp}.txt`);
     
     // Save the extracted text
-    fs.writeFileSync(outputPath, extractedText);
+    fs.writeFileSync(textOutputPath, extractedText);
     
     console.log('\nExtracted Text:');
     console.log('----------------------------------------');
     console.log(extractedText);
     console.log('----------------------------------------');
-    console.log(`\nText has been saved to: ${outputPath}`);
+    console.log(`\nText has been saved to: ${textOutputPath}`);
 
     // Generate interview question using Gemini
     console.log('\nGenerating interview question...');
@@ -117,6 +118,13 @@ async function extractAndProcessPDF() {
       console.log('----------------------------------------');
       console.log(question);
       console.log('----------------------------------------');
+
+      // Convert question to speech using ElevenLabs
+      console.log('\nConverting question to speech...');
+      const audioOutputPath = path.join(outputDir, `${originalFileName}_${timestamp}.mp3`);
+      await textToSpeech(question, audioOutputPath, 'en-us');
+      
+      console.log(`\nAudio has been saved to: ${audioOutputPath}`);
     } catch (geminiError) {
       console.error('\nError with Gemini API:', geminiError.message);
       console.log('\nGenerating fallback question instead...');
@@ -127,6 +135,13 @@ async function extractAndProcessPDF() {
       console.log('----------------------------------------');
       console.log(fallbackQuestion);
       console.log('----------------------------------------');
+      
+      // Convert fallback question to speech
+      console.log('\nConverting fallback question to speech...');
+      const audioOutputPath = path.join(outputDir, `${originalFileName}_${timestamp}_fallback.mp3`);
+      await textToSpeech(fallbackQuestion, audioOutputPath);
+      
+      console.log(`\nAudio has been saved to: ${audioOutputPath}`);
       console.log('\nNote: This is a fallback question generated without using AI. For better questions, please fix the Gemini API issue.');
     }
     
