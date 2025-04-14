@@ -1,7 +1,28 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import InterviewScene from '../assets/3d/InterviewScene';
+import { isAuthenticated } from '../services/authService';
 
 const LandingPage = () => {
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const isAuth = await isAuthenticated();
+        setIsUserAuthenticated(isAuth);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setIsUserAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-[#09090B] relative">
       {/* 3D Scene Section - Full Width */}
@@ -18,12 +39,14 @@ const LandingPage = () => {
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl font-medium text-paragraph font-chakra mt-2 sm:mt-4">
             your interview buddy!
           </h2>
-          <Link 
-            to="/interview"
-            className="mt-8 sm:mt-14 inline-block bg-[#E9EAEA] text-[#09090B] font-chakra font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full transition duration-300 hover:bg-opacity-90 text-xs sm:text-sm"
-          >
-            Let's Get Started
-          </Link>
+          {!loading && (
+            <Link 
+              to={isUserAuthenticated ? "/interview" : "/login"}
+              className="mt-8 sm:mt-14 inline-block bg-[#E9EAEA] text-[#09090B] font-chakra font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full transition duration-300 hover:bg-opacity-90 text-xs sm:text-sm"
+            >
+              {isUserAuthenticated ? "Let's Get Started" : "Login to Start"}
+            </Link>
+          )}
         </div>
       </div>
     </div>
