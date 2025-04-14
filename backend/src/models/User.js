@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema({
   authMethod: {
     type: String,
     required: true,
-    enum: ['jwt', 'google'],
+    enum: ['jwt', 'google', 'firebase'],
     default: 'jwt'
   },
   // User data
