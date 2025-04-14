@@ -13,7 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'; // Upda
 const saveUserToMongoDB = async (user) => {
     try {
         const token = await user.getIdToken();
-        const response = await fetch(`${API_URL}/api/users/save`, {
+        const response = await fetch(`${API_URL}/api/auth/firebase`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

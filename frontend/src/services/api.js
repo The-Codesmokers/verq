@@ -95,39 +95,10 @@ export const api = {
     }),
 
   createInterview: async (formData) => {
-    const token = localStorage.getItem('firebaseToken');
-    if (!token) {
-      throw new Error('No token provided');
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/interview/start`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          localStorage.removeItem('firebaseToken');
-          window.location.href = '/login';
-        }
-        throw new Error(errorData.message || 'Something went wrong');
-      }
-
-      const data = await response.json();
-      if (data.status !== 'success' || !data.data || !data.data.interviewId) {
-        throw new Error('Invalid response from server');
-      }
-      return data;
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
-    }
+    return await fetchData('/interview/start', {
+      method: 'POST',
+      body: formData
+    });
   },
 
   submitAnswer: async (interviewId, formData) => {
