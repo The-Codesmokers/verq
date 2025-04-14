@@ -34,11 +34,13 @@ const Register = () => {
     }
 
     try {
-      await register(displayName, email, password);
-      navigate('/');
+      const user = await register(displayName, email, password);
+      if (user) {
+        navigate('/');
+      }
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || 'Failed to register. Please try again.');
+      setError(err.message || 'Failed to register');
     } finally {
       setLoading(false);
     }
