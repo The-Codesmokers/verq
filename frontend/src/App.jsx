@@ -1,8 +1,14 @@
-import { BrowserRouter as Router, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, useLocation, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { AppRoutes } from './routes';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import LandingPage from './pages/LandingPage';
+import Dashboard from './pages/Dashboard';
+import MyInterviews from './pages/MyInterviews';
+import Interview from './pages/Interview';
+import InterviewSession from './pages/InterviewSession';
 import './App.css';
 
 // Create a wrapper component to access location
@@ -14,7 +20,15 @@ const AppContent = () => {
     <div className="min-h-screen flex flex-col">
       {!isAuthPage && <Navbar />}
       <main className="flex-grow">
-        <AppRoutes />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/interview" element={<Interview />} />
+          <Route path="/interview/session/:sessionId" element={<InterviewSession />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/my-interviews" element={<MyInterviews />} />
+        </Routes>
       </main>
       <Footer />
     </div>
