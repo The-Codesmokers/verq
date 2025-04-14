@@ -1,10 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 const { processPDF } = require('../services/pdfService');
-const { generateInterviewQuestion } = require('../services/geminiService');
+const { generateInterviewQuestion, evaluateAnswer, generateFollowUpQuestion } = require('../services/geminiService');
 const { textToSpeech } = require('../services/textToSpeechService');
 const { speechToText } = require('../services/deepgramService');
 const { validateConfig } = require('../config/config');
+
+// Set environment variables
+// process.env.GEMINI_API_KEY = 'AIzaSyDQekyR-NW55U8gWW_9Rzu_PojkivR0UA0';
+// process.env.DEEPGRAM_API_KEY = '11a2141f6e93fc20f32d03b2932c32aefb1c6eeb';
 
 // Validate environment variables
 validateConfig();
@@ -45,49 +49,90 @@ async function runInterviewFlow(pdfPath, audioPath = "C:\\Users\\amana\\Repos\\v
     fs.writeFileSync(textOutputPath, resumeText);
     console.log(`\nExtracted text saved to: ${textOutputPath}`);
 
-    // Step 2: Generate interview question using Gemini
-    console.log('\nGenerating interview question...');
-    const question = await generateInterviewQuestion(resumeText);
-    console.log('\nGenerated Question:');
-    console.log('----------------------------------------');
-    console.log(question);
-    console.log('----------------------------------------');
-
-    // Step 3: Convert question to speech
-    console.log('\nConverting question to speech...');
-    const questionAudioPath = path.join(outputDir, `${originalFileName}_question_${timestamp}.mp3`);
-    await textToSpeech(question, questionAudioPath, 'en-us');
-    console.log(`\nQuestion audio saved to: ${questionAudioPath}`);
-
-    // Step 4: Process the audio response
-    console.log('\nProcessing audio response...');
-    if (!fs.existsSync(audioPath)) {
-      throw new Error(`Audio file not found: ${audioPath}`);
-    }
-
-    // Step 5: Convert response to text using Deepgram
-    console.log('\nConverting response to text...');
-    const responseBuffer = fs.readFileSync(audioPath);
-    const transcript = await speechToText(responseBuffer);
-    console.log('\nTranscribed Response:');
-    console.log('----------------------------------------');
-    console.log(transcript);
-    console.log('----------------------------------------');
-
-    // Save the transcript
-    const transcriptPath = path.join(outputDir, `${originalFileName}_transcript_${timestamp}.txt`);
-    fs.writeFileSync(transcriptPath, transcript);
-    console.log(`\nTranscript saved to: ${transcriptPath}`);
-
-    return {
+    const interviewResults = {
       resumeText,
       textOutputPath,
-      question,
-      questionAudioPath,
-      responseAudioPath: audioPath,
-      transcript,
-      transcriptPath
+      questions: [],
+      responses: [],
+      evaluations: []
     };
+
+    // Generate initial question
+    console.log('\nGenerating initial interview question...');
+    let currentQuestion = await generateInterviewQuestion(resumeText);
+    interviewResults.questions.push(currentQuestion);
+
+    // Process 5 questions
+    for (let i = 0; i < 5; i++) {
+      console.log(`\nQuestion ${i + 1}:`);
+      console.log('----------------------------------------');
+      console.log(currentQuestion);
+      console.log('----------------------------------------');
+
+      // Convert question to speech
+      console.log('\nConverting question to speech...');
+      const questionAudioPath = path.join(outputDir, `${originalFileName}_question_${i + 1}_${timestamp}.mp3`);
+      await textToSpeech(currentQuestion, questionAudioPath, 'en-us');
+      console.log(`\nQuestion audio saved to: ${questionAudioPath}`);
+
+      // Process the audio response
+      console.log('\nProcessing audio response...');
+      if (!fs.existsSync(audioPath)) {
+        throw new Error(`Audio file not found: ${audioPath}`);
+      }
+
+      // Convert response to text
+      console.log('\nConverting response to text...');
+      const responseBuffer = fs.readFileSync(audioPath);
+      const transcript = await speechToText(responseBuffer);
+      console.log('\nTranscribed Response:');
+      console.log('----------------------------------------');
+      console.log(transcript);
+      console.log('----------------------------------------');
+
+      // Save the transcript
+      const transcriptPath = path.join(outputDir, `${originalFileName}_transcript_${i + 1}_${timestamp}.txt`);
+      fs.writeFileSync(transcriptPath, transcript);
+      console.log(`\nTranscript saved to: ${transcriptPath}`);
+
+      // Evaluate the answer
+      console.log('\nEvaluating answer...');
+      const evaluation = await evaluateAnswer(currentQuestion, transcript);
+      console.log('\nEvaluation Results:');
+      console.log('----------------------------------------');
+      console.log(JSON.stringify(evaluation, null, 2));
+      console.log('----------------------------------------');
+
+      // Save the evaluation
+      const evaluationPath = path.join(outputDir, `${originalFileName}_evaluation_${i + 1}_${timestamp}.json`);
+      fs.writeFileSync(evaluationPath, JSON.stringify(evaluation, null, 2));
+      console.log(`\nEvaluation saved to: ${evaluationPath}`);
+
+      // Store results
+      interviewResults.responses.push({
+        transcript,
+        transcriptPath,
+        audioPath
+      });
+      interviewResults.evaluations.push({
+        evaluation,
+        evaluationPath
+      });
+
+      // Generate follow-up question if not the last question
+      if (i < 4) {
+        console.log('\nGenerating follow-up question...');
+        currentQuestion = await generateFollowUpQuestion(
+          resumeText,
+          currentQuestion,
+          transcript,
+          evaluation
+        );
+        interviewResults.questions.push(currentQuestion);
+      }
+    }
+
+    return interviewResults;
   } catch (error) {
     console.error('Error in interview flow:', error.message);
     throw error;
