@@ -65,7 +65,7 @@ export const register = async (displayName, email, password) => {
 
         const data = await response.json();
         if (data.token) {
-            localStorage.setItem('token', data.token);
+            localStorage.setItem('firebaseToken', data.token);
             return data.data.user;
         } else {
             throw new Error('No token received from server');
@@ -96,7 +96,7 @@ export const login = async (email, password) => {
 
         const data = await response.json();
         if (data.token) {
-            localStorage.setItem('token', data.token);
+            localStorage.setItem('firebaseToken', data.token);
             return data.data.user;
         } else {
             throw new Error('No token received from server');
@@ -110,7 +110,7 @@ export const login = async (email, password) => {
 export const logout = async () => {
     try {
         await signOut(auth);
-        localStorage.removeItem('token');
+        localStorage.removeItem('firebaseToken');
     } catch (error) {
         console.error('Logout error:', error);
         throw error;
@@ -119,13 +119,28 @@ export const logout = async () => {
 
 export const signInWithGoogle = async () => {
     try {
+        console.log('Starting Google Sign-In...');
         const result = await signInWithPopup(auth, googleProvider);
         const { user } = result;
+        console.log('Firebase user:', user);
+        
+        // Get the Firebase ID token
+        const token = await user.getIdToken();
+        console.log('Firebase ID Token:', token);
+        
+        // Store token in localStorage
+        localStorage.setItem('firebaseToken', token);
+        console.log('Token stored in localStorage');
+        
+        // Verify token was stored
+        const storedToken = localStorage.getItem('firebaseToken');
+        console.log('Stored token verification:', storedToken ? 'Success' : 'Failed');
         
         const response = await fetch(`${API_URL}/api/auth/google`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 uid: user.uid,
@@ -141,20 +156,47 @@ export const signInWithGoogle = async () => {
         }
 
         const data = await response.json();
-        if (data.token) {
-            localStorage.setItem('token', data.token);
-            return data.data.user;
-        } else {
-            throw new Error('No token received from server');
-        }
+        console.log('Backend response:', data);
+        return data.data.user;
     } catch (error) {
         console.error('Google sign-in error:', error);
+        // Clear token on error
+        localStorage.removeItem('firebaseToken');
         throw error;
     }
 };
 
-// Add a function to check if user is authenticated
-export const isAuthenticated = () => {
-    const token = localStorage.getItem('token');
-    return !!token;
+// Add a function to check and refresh the token if needed
+export const checkAndRefreshToken = async () => {
+    try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+            const token = await currentUser.getIdToken(true); // Force refresh
+            localStorage.setItem('firebaseToken', token);
+            return token;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        return null;
+    }
+};
+
+// Update isAuthenticated to check both token and current user
+export const isAuthenticated = async () => {
+    const token = localStorage.getItem('firebaseToken');
+    const currentUser = auth.currentUser;
+    
+    if (!token || !currentUser) {
+        return false;
+    }
+    
+    // Verify token is still valid
+    try {
+        await currentUser.getIdToken(true);
+        return true;
+    } catch (error) {
+        console.error('Token validation error:', error);
+        return false;
+    }
 }; 

@@ -32,10 +32,20 @@ const Login = () => {
     try {
       const user = await signInWithGoogle();
       console.log('Signed in user:', user);
+      
+      // Verify token is stored
+      const token = localStorage.getItem('firebaseToken');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      // Navigate only after successful token storage
       navigate('/');
     } catch (error) {
-      setError(error.message || "Failed to sign in with Google");
       console.error('Error during Google sign in:', error);
+      setError(error.message || "Failed to sign in with Google");
+      // Clear any partial state
+      localStorage.removeItem('firebaseToken');
     } finally {
       setLoading(false);
     }
