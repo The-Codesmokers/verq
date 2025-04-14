@@ -3,9 +3,10 @@ import {
     signInWithPopup, 
     signOut,
     createUserWithEmailAndPassword,
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    GithubAuthProvider
 } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
+import { auth, googleProvider, githubProvider } from '../config/firebase';
 
 const API_URL = 'http://localhost:3000'; // Updated to match backend port
 
@@ -149,6 +150,50 @@ export const signInWithGoogle = async () => {
         }
     } catch (error) {
         console.error('Google sign-in error:', error);
+        throw error;
+    }
+};
+
+export const signInWithGitHub = async () => {
+    try {
+        const result = await signInWithPopup(auth, githubProvider);
+        const { user } = result;
+        
+        // Check if the user exists in our MongoDB database
+        const response = await fetch(`${API_URL}/api/auth/github`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName,
+                photoURL: user.photoURL,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            if (errorData.message === 'Email already registered with different authentication method') {
+                // Handle the case where the email is registered with a different method
+                throw new Error('This email is already registered with a different authentication method. Please use the original method to sign in.');
+            }
+            throw new Error(errorData.message || 'Failed to authenticate with backend');
+        }
+
+        const data = await response.json();
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            return data.data.user;
+        } else {
+            throw new Error('No token received from server');
+        }
+    } catch (error) {
+        console.error('GitHub sign-in error:', error);
+        if (error.code === 'auth/account-exists-with-different-credential') {
+            throw new Error('This email is already registered with a different authentication method. Please use the original method to sign in.');
+        }
         throw error;
     }
 };
