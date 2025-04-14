@@ -54,6 +54,11 @@ function InterviewSession() {
   const [audioURL, setAudioURL] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const timerRef = useRef(null);
+  const [currentEvaluation, setCurrentEvaluation] = useState(null);
+  const [showEvaluation, setShowEvaluation] = useState(false);
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+  const [overallEvaluation, setOverallEvaluation] = useState(null);
+  const [isComplete, setIsComplete] = useState(false);
 
   // Get the actual interviewId from either params or localStorage
   const interviewId = paramsInterviewId || (() => {
@@ -137,9 +142,18 @@ function InterviewSession() {
       setRecordingTime(0);
       audioChunksRef.current = [];
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      });
+      
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: 'audio/webm;codecs=opus',
+        audioBitsPerSecond: 128000
       });
       mediaRecorderRef.current = mediaRecorder;
 
@@ -150,7 +164,9 @@ function InterviewSession() {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { 
+          type: 'audio/webm;codecs=opus'
+        });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
         await submitAnswer(audioBlob);
@@ -220,23 +236,38 @@ function InterviewSession() {
 
       const { data } = await api.submitAnswer(interviewId, formData);
 
-      setServiceStatus(prev => ({ 
-        ...prev, 
-        geminiEvaluation: 'completed',
-        geminiQuestion: 'in_progress' 
-      }));
-      setActiveService('geminiQuestion');
+      // Store the evaluation and show it
+      setCurrentEvaluation(data.evaluation);
+      setShowEvaluation(true);
 
-      // Update current question with the next one
-      if (data.nextQuestion) {
-        setCurrentQuestion(data.nextQuestion);
+      if (data.isComplete) {
+        setIsComplete(true);
+        setOverallEvaluation(data.overallEvaluation);
+        setServiceStatus(prev => ({ 
+          ...prev, 
+          geminiEvaluation: 'completed'
+        }));
+      } else {
+        setServiceStatus(prev => ({ 
+          ...prev, 
+          geminiEvaluation: 'completed',
+          geminiQuestion: 'in_progress' 
+        }));
+        setActiveService('geminiQuestion');
+
+        // Update current question with the next one
+        if (data.nextQuestion) {
+          setCurrentQuestion(data.nextQuestion);
+        }
       }
       
       // Refresh interview data to show updated questions
       const { data: updatedInterview } = await api.getInterviewById(interviewId);
       setInterview(updatedInterview);
 
-      setServiceStatus(prev => ({ ...prev, geminiQuestion: 'completed' }));
+      if (!data.isComplete) {
+        setServiceStatus(prev => ({ ...prev, geminiQuestion: 'completed' }));
+      }
       setActiveService(null);
     } catch (err) {
       console.error('Error submitting answer:', err);
@@ -248,6 +279,32 @@ function InterviewSession() {
         geminiQuestion: 'pending'
       }));
       setActiveService(null);
+    }
+  };
+
+  const handleGenerateFollowUp = async () => {
+    try {
+      setIsGeneratingQuestion(true);
+      setActiveService('geminiQuestion');
+      setServiceStatus(prev => ({ ...prev, geminiQuestion: 'in_progress' }));
+
+      const { data } = await api.generateFollowUpQuestion(interviewId);
+      
+      if (data.nextQuestion) {
+        setCurrentQuestion(data.nextQuestion);
+        setShowEvaluation(false);
+        setCurrentEvaluation(null);
+      }
+
+      setServiceStatus(prev => ({ ...prev, geminiQuestion: 'completed' }));
+      setActiveService(null);
+    } catch (err) {
+      console.error('Error generating follow-up question:', err);
+      setError(err.message || 'Failed to generate follow-up question');
+      setServiceStatus(prev => ({ ...prev, geminiQuestion: 'pending' }));
+      setActiveService(null);
+    } finally {
+      setIsGeneratingQuestion(false);
     }
   };
 
@@ -347,6 +404,319 @@ function InterviewSession() {
                       </p>
                     </div>
                   )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Evaluation Results */}
+            {showEvaluation && currentEvaluation && (
+              <motion.div
+                className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-4 sm:p-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-4">
+                  Evaluation Results
+                </h3>
+                
+                {/* Overall Score */}
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Overall Score:</span>
+                    <div className="flex items-center">
+                      {[...Array(10)].map((_, i) => (
+                        <svg
+                          key={i}
+                          className={`w-5 h-5 ${
+                            i < Math.floor(currentEvaluation?.overallScore || 0)
+                              ? 'text-yellow-400'
+                              : 'text-gray-400'
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                        {(currentEvaluation?.overallScore || 0).toFixed(1)}/10.0
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Scores */}
+                <div className="space-y-4 mb-6">
+                  {/* Clarity Score */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Clarity</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentEvaluation?.clarity?.score || 0}/10
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {currentEvaluation?.clarity?.explanation || 'No clarity feedback available'}
+                    </p>
+                  </div>
+
+                  {/* Technical Accuracy Score */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Technical Accuracy</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentEvaluation?.technicalAccuracy?.score || 0}/10
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {currentEvaluation?.technicalAccuracy?.explanation || 'No technical accuracy feedback available'}
+                    </p>
+                  </div>
+
+                  {/* Language & Communication Score */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Language & Communication</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentEvaluation?.language?.score || 0}/10
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {currentEvaluation?.language?.explanation || 'No language feedback available'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Strengths and Areas for Improvement */}
+                <div className="space-y-4">
+                  {/* Strengths */}
+                  {currentEvaluation?.strengths?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        Key Strengths
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {currentEvaluation.strengths.map((strength, index) => (
+                          <li key={index} className="text-sm text-gray-700 dark:text-gray-300">
+                            {strength}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Areas for Improvement */}
+                  {currentEvaluation?.areasForImprovement?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        Areas for Improvement
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {currentEvaluation.areasForImprovement.map((area, index) => (
+                          <li key={index} className="text-sm text-gray-700 dark:text-gray-300">
+                            {area}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {currentEvaluation?.recommendations?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        Recommendations
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {currentEvaluation.recommendations.map((recommendation, index) => (
+                          <li key={index} className="text-sm text-gray-700 dark:text-gray-300">
+                            {recommendation}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Next Button - Only show if interview is not complete */}
+                <div className="mt-6 flex justify-between items-center">
+                  <button
+                    onClick={() => setShowEvaluation(false)}
+                    className="text-sm text-gray-500 hover:text-gray-400 transition-colors"
+                  >
+                    Close Evaluation
+                  </button>
+                  {!isComplete && (
+                    <motion.button
+                      onClick={handleGenerateFollowUp}
+                      className="px-6 py-2 bg-indigo-500 text-white rounded-full
+                        hover:bg-indigo-600 transition-colors duration-200
+                        flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={isGeneratingQuestion}
+                    >
+                      {isGeneratingQuestion ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                          Next Question
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Overall Evaluation */}
+            {isComplete && overallEvaluation && (
+              <motion.div
+                className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl p-8 mt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+                  Final Interview Evaluation
+                </h2>
+
+                {/* Scores Section */}
+                <div className="space-y-6 mb-8">
+                  {/* Technical Proficiency */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                        Technical Proficiency
+                      </span>
+                      <span className="text-2xl font-bold text-indigo-500">
+                        {overallEvaluation.technicalProficiency.score}/10
+                      </span>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {overallEvaluation.technicalProficiency.explanation}
+                    </p>
+                  </div>
+
+                  {/* Communication Skills */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                        Communication Skills
+                      </span>
+                      <span className="text-2xl font-bold text-indigo-500">
+                        {overallEvaluation.communicationSkills.score}/10
+                      </span>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {overallEvaluation.communicationSkills.explanation}
+                    </p>
+                  </div>
+
+                  {/* Problem Solving */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                        Problem-Solving Ability
+                      </span>
+                      <span className="text-2xl font-bold text-indigo-500">
+                        {overallEvaluation.problemSolvingAbility.score}/10
+                      </span>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {overallEvaluation.problemSolvingAbility.explanation}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Hiring Recommendation */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      Hiring Recommendation:
+                    </h3>
+                    <span className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                      overallEvaluation.hiringRecommendation.decision === 'STRONG HIRE'
+                        ? 'bg-green-500/20 text-green-500'
+                        : overallEvaluation.hiringRecommendation.decision === 'HIRE'
+                        ? 'bg-blue-500/20 text-blue-500'
+                        : overallEvaluation.hiringRecommendation.decision === 'CONSIDER'
+                        ? 'bg-yellow-500/20 text-yellow-500'
+                        : 'bg-red-500/20 text-red-500'
+                    }`}>
+                      {overallEvaluation.hiringRecommendation.decision}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {overallEvaluation.hiringRecommendation.justification}
+                  </p>
+                </div>
+
+                {/* Feedback Sections */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Key Strengths */}
+                  <div className="space-y-3">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Key Strengths
+                    </h4>
+                    <ul className="list-disc list-inside space-y-2">
+                      {overallEvaluation.strengths.map((strength, index) => (
+                        <li key={index} className="text-gray-600 dark:text-gray-400">
+                          {strength}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Areas for Growth */}
+                  <div className="space-y-3">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Areas for Growth
+                    </h4>
+                    <ul className="list-disc list-inside space-y-2">
+                      {overallEvaluation.areasForGrowth.map((area, index) => (
+                        <li key={index} className="text-gray-600 dark:text-gray-400">
+                          {area}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="space-y-3">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Final Recommendations
+                    </h4>
+                    <ul className="list-disc list-inside space-y-2">
+                      {overallEvaluation.recommendations.map((rec, index) => (
+                        <li key={index} className="text-gray-600 dark:text-gray-400">
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Overall Score */}
+                <div className="mt-8 text-center">
+                  <div className="inline-block">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      Overall Interview Score
+                    </h3>
+                    <div className="text-4xl font-bold text-indigo-500">
+                      {overallEvaluation.overallScore}/10
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}

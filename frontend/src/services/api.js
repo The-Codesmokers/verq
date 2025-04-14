@@ -129,12 +129,18 @@ export const api = {
     }
   },
 
-  submitAnswer: (interviewId, formData) =>
-    fetchData(`/interview/${interviewId}/answer`, {
+  submitAnswer: async (interviewId, formData) => {
+    return await fetchData(`/interview/${interviewId}/answer`, {
       method: 'POST',
-      body: formData,
-      headers: {}
-    }),
+      body: formData
+    });
+  },
+
+  generateFollowUpQuestion: async (interviewId) => {
+    return await fetchData(`/interview/${interviewId}/follow-up`, {
+      method: 'POST'
+    });
+  },
 
   // Generic methods for custom endpoints
   get: (endpoint) => fetchData(endpoint),

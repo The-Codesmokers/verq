@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const Interview = require('../models/Interview');
-const { createInterview, getUserInterviews, updateInterviewStatus, addQuestionAnswer } = require('../services/interviewService');
+const { createInterview, getUserInterviews, updateInterviewStatus, addQuestionAnswer, completeInterview } = require('../services/interviewService');
 const { processPDF } = require('../services/pdfService');
-const { generateInterviewQuestion, evaluateAnswer } = require('../services/geminiService');
+const { generateInterviewQuestion, evaluateAnswer, generateFollowUpQuestion, generateOverallEvaluation } = require('../services/geminiService');
 const { speechToText } = require('../services/deepgramService');
 const multer = require('multer');
 
@@ -131,15 +131,20 @@ router.post('/:interviewId/answer', authMiddleware, upload.single('audio'), asyn
       });
     }
 
+    // Get the interview to check question count
+    const interview = await Interview.findById(req.params.interviewId);
+    if (!interview) {
+      throw new Error('Interview not found');
+    }
+
     console.log('Converting speech to text...');
-    // Convert speech to text
     const transcript = await speechToText(audio.buffer);
+    console.log('Transcript:', transcript);
 
     console.log('Evaluating answer...');
-    // Evaluate answer
     const evaluation = await evaluateAnswer(currentQuestion, transcript);
+    console.log('Evaluation result:', JSON.stringify(evaluation, null, 2));
 
-    console.log('Adding question and answer to interview...');
     // Add question and answer to interview
     await addQuestionAnswer(
       req.params.interviewId,
@@ -148,9 +153,30 @@ router.post('/:interviewId/answer', authMiddleware, upload.single('audio'), asyn
       evaluation
     );
 
+    // Check if this was the 5th question
+    const updatedInterview = await Interview.findById(req.params.interviewId);
+    if (updatedInterview.questions.length >= 5) {
+      console.log('Generating overall evaluation...');
+      const overallEvaluation = await generateOverallEvaluation(
+        updatedInterview.questions,
+        updatedInterview.jobRole
+      );
+
+      // Complete the interview with overall evaluation
+      await completeInterview(req.params.interviewId, overallEvaluation);
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          isComplete: true,
+          evaluation,
+          overallEvaluation
+        }
+      });
+    }
+
+    // If not the 5th question, generate next question
     console.log('Generating next question...');
-    // Generate next question
-    const interview = await Interview.findById(req.params.interviewId);
     const nextQuestion = await generateInterviewQuestion(
       interview.resumeText,
       interview.jobRole
@@ -160,6 +186,7 @@ router.post('/:interviewId/answer', authMiddleware, upload.single('audio'), asyn
     res.status(200).json({
       status: 'success',
       data: {
+        isComplete: false,
         nextQuestion,
         evaluation
       }
@@ -173,6 +200,58 @@ router.post('/:interviewId/answer', authMiddleware, upload.single('audio'), asyn
     res.status(500).json({
       status: 'error',
       message: error.message || 'Failed to process answer'
+    });
+  }
+});
+
+// Generate follow-up question
+router.post('/:interviewId/follow-up', authMiddleware, async (req, res) => {
+  try {
+    console.log('Generating follow-up question for interview:', req.params.interviewId);
+    
+    // Get the interview
+    const interview = await Interview.findById(req.params.interviewId);
+    if (!interview) {
+      console.error('Interview not found:', req.params.interviewId);
+      return res.status(404).json({
+        status: 'error',
+        message: 'Interview not found'
+      });
+    }
+
+    // Get the last question and answer
+    const lastQA = interview.questions[interview.questions.length - 1];
+    if (!lastQA) {
+      // If no previous Q&A, generate a new question
+      const nextQuestion = await generateInterviewQuestion(interview.resumeText, interview.jobRole);
+      return res.status(200).json({
+        status: 'success',
+        data: { nextQuestion }
+      });
+    }
+
+    // Generate follow-up question based on the last Q&A
+    const nextQuestion = await generateFollowUpQuestion(
+      interview.resumeText,
+      lastQA.question,
+      lastQA.answer,
+      lastQA.evaluation
+    );
+
+    console.log('Follow-up question generated successfully:', req.params.interviewId);
+    res.status(200).json({
+      status: 'success',
+      data: { nextQuestion }
+    });
+  } catch (error) {
+    console.error('Error in /:interviewId/follow-up route:', {
+      interviewId: req.params.interviewId,
+      error: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({
+      status: 'error',
+      message: error.message || 'Failed to generate follow-up question'
     });
   }
 });

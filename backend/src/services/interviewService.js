@@ -159,9 +159,47 @@ async function addQuestionAnswer(interviewId, question, answer, evaluation) {
   }
 }
 
+/**
+ * Completes the interview and saves the overall evaluation
+ * @param {string} interviewId - The MongoDB _id of the interview
+ * @param {Object} overallEvaluation - The overall evaluation object
+ * @returns {Promise<Object>} - Updated interview document
+ */
+async function completeInterview(interviewId, overallEvaluation) {
+  try {
+    console.log('Completing interview and saving overall evaluation:', interviewId);
+    
+    const interview = await Interview.findByIdAndUpdate(
+      interviewId,
+      {
+        status: 'completed',
+        overallEvaluation,
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!interview) {
+      console.error('Interview not found:', interviewId);
+      throw new Error('Interview not found');
+    }
+    
+    console.log('Interview completed successfully:', interviewId);
+    return interview;
+  } catch (error) {
+    console.error('Error in completeInterview:', {
+      interviewId,
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+}
+
 module.exports = {
   createInterview,
   getUserInterviews,
   updateInterviewStatus,
-  addQuestionAnswer
+  addQuestionAnswer,
+  completeInterview
 }; 
