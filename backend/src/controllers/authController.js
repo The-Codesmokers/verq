@@ -91,7 +91,7 @@ const login = async (req, res) => {
 
 const googleAuth = async (req, res) => {
   try {
-    const { uid, email, name, photoURL } = req.body;
+    const { uid, email, displayName, photoURL } = req.body;
 
     // Check if user already exists
     let user = await User.findOne({ 
@@ -104,7 +104,7 @@ const googleAuth = async (req, res) => {
     if (!user) {
       // Create new user if doesn't exist
       user = await User.create({
-        displayName: name,
+        displayName,
         email,
         authMethod: 'google',
         uid,
