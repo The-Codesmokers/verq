@@ -98,6 +98,88 @@ This will:
 4. If OpenAI is unavailable, generate a fallback question based on the resume content
 5. Display both the extracted text and the generated question
 
+### Text-to-Speech Functionality
+The backend includes a Deepgram Text-to-Speech service that converts text to natural-sounding speech.
+
+#### Prerequisites
+- Deepgram API key (for text-to-speech conversion)
+- Gemini API key (for generating questions)
+
+#### Setup
+1. Add your Deepgram API key to the `.env` file:
+   ```
+   DEEPGRAM_API_KEY=your_deepgram_api_key_here
+   ```
+
+2. Add your Gemini API key to the `.env` file:
+   ```
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+3. Make sure the output directory exists:
+   ```bash
+   mkdir -p backend/src/output
+   ```
+
+#### Testing the Text-to-Speech Service
+To test the text-to-speech functionality with a predefined text:
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+
+2. Run the test script:
+   ```bash
+   npm run test-tts
+   ```
+
+This will:
+1. Validate the environment variables
+2. Convert a sample text to speech using Deepgram
+3. Save the audio file to `backend/src/output/test-tts-output.mp3`
+4. Display the file size and location
+
+#### Generating a Question and Converting it to Speech
+To generate an interview question using Gemini and convert it to speech:
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+
+2. Run the question generation and TTS script:
+   ```bash
+   npm run generate-question-tts
+   ```
+
+This will:
+1. Validate the environment variables
+2. Generate an interview question based on a sample resume using Gemini
+3. Convert the generated question to speech using Deepgram
+4. Save the audio file to `backend/src/output/question-tts-output.mp3`
+5. Display the question text, file size, and location
+
+You can listen to the generated audio file to verify the quality of the text-to-speech conversion.
+
+#### Using the Text-to-Speech Service in Your Code
+To use the text-to-speech service in your application:
+
+```javascript
+const { textToSpeech } = require('./services/deepgramTTSService');
+
+// Example usage
+async function generateSpeech() {
+  try {
+    const text = "Hello! This is a test of the Deepgram Text-to-Speech service.";
+    const outputPath = await textToSpeech(text);
+    console.log(`Audio file saved to: ${outputPath}`);
+  } catch (error) {
+    console.error('Error generating speech:', error);
+  }
+}
+```
+
 The backend server will start on port 3000 by default. Make sure to set up your environment variables in a `.env` file if required.
 
 ### API Endpoints
